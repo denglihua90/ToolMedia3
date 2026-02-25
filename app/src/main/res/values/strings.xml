@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">ToolMedia3</string>
+    
+    <!-- 错误信息 -->
+    <string name="error_network">网络错误，请检查网络连接</string>
+    <string name="error_decode">视频解码错误</string>
+    <string name="error_format_unsupported">播放格式不支持</string>
+    <string name="error_source">播放源错误</string>
+    <string name="error_initialization_failed">播放器初始化失败</string>
+    <string name="error_format_generic">格式错误: %d</string>
+    <string name="error_initialization_generic">初始化错误: %d</string>
+    <string name="error_generic">播放错误: %d</string>
+    
+    <!-- HTTP 错误信息 -->
+    <string name="error_http_request" formatted="false">请求错误: %d %s</string>
+    <string name="error_http_server" formatted="false">服务器错误: %d %s</string>
+    <string name="error_http_forbidden">访问被拒绝，请检查播放链接权限</string>
+    <string name="error_http_not_found">播放资源不存在</string>
+    <string name="error_http_timeout">请求超时，请检查网络连接</string>
+    <string name="error_http_generic" formatted="false">网络错误: %d %s</string>
+    <string name="error_http_connection_failed">网络错误: 连接失败</string>
+    <string name="error_http_cause">网络错误: %s</string>
+</resources>
