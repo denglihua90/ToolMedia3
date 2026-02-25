@@ -16,7 +16,7 @@
         android:padding="20dp"
         android:orientation="vertical"
         android:visibility="gone"
-        tools:visibility="visible"
+        tools:visibility="gone"
        >
 
         <RelativeLayout
@@ -58,7 +58,7 @@
         android:background="@android:color/black"
         android:orientation="vertical"
         android:visibility="gone"
-        tools:visibility="gone"
+        tools:visibility="visible"
         >
 
         <!-- 顶部控制栏 -->
@@ -74,7 +74,7 @@
                 android:layout_height="match_parent"
                 android:padding="12dp"
                 android:scaleType="center"
-                android:src="@drawable/baseline_back_arrow_36"
+                android:src="@drawable/baseline_back_arrow_24"
                 app:tint="@android:color/white" />
 
             <Space

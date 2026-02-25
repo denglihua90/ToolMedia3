@@ -42,7 +42,7 @@ class VideoController(
     private var lastY = 0f
     private var startX = 0f
     private var startY = 0f
-    private var currentGesture = GESTURE_NONE
+    private var currentGesture = GestureType.NONE
     private var brightness = 0f
     private var volume = 0f
     private var progress = 0L
@@ -52,13 +52,15 @@ class VideoController(
     private val gestureDetector: GestureDetector
     private var isLandscape = false // 是否为横屏模式
 
-    companion object {
-        // 手势类型
-        const val GESTURE_NONE = 0
-        const val GESTURE_BRIGHTNESS = 1
-        const val GESTURE_VOLUME = 2
-        const val GESTURE_PROGRESS = 3
+    // 手势类型枚举
+    enum class GestureType {
+        NONE,
+        BRIGHTNESS,
+        VOLUME,
+        PROGRESS
+    }
 
+    companion object {
         // 手势反馈显示时长
         const val GESTURE_FEEDBACK_DURATION = 1500L
     }
@@ -95,7 +97,7 @@ class VideoController(
                     startY = e.y
                     lastX = e.x
                     lastY = e.y
-                    currentGesture = GESTURE_NONE
+                    currentGesture = GestureType.NONE
 
                     // 记录当前值
                     brightness = viewModel.state.value.brightness
@@ -126,73 +128,74 @@ class VideoController(
                         Math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
 
                     // 如果滑动距离超过阈值，才认为是手势操作
-                    if (swipeDistance > gestureConfig.gestureThreshold && currentGesture == GESTURE_NONE) {
-                        // 根据滑动方向和位置确定手势类型
-                        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-                            // 上下滑动
-                            if (gestureConfig.enableVerticalSwipe) {
-                                currentGesture = getGestureType(x, y)
-                            }
-                        } else {
-                            // 左右滑动
-                            if (gestureConfig.enableHorizontalSwipe) {
-                                currentGesture = GESTURE_PROGRESS
-                            }
+                if (swipeDistance > gestureConfig.gestureThreshold && currentGesture == GestureType.NONE) {
+                    // 根据滑动方向和位置确定手势类型
+                    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                        // 上下滑动
+                        if (gestureConfig.enableVerticalSwipe) {
+                            currentGesture = getGestureType(x, y)
+                        }
+                    } else {
+                        // 左右滑动
+                        if (gestureConfig.enableHorizontalSwipe) {
+                            currentGesture = GestureType.PROGRESS
                         }
                     }
+                }
 
-                    when (currentGesture) {
-                        GESTURE_BRIGHTNESS -> {
-                            // 亮度调节（上下滑动）
-                            val brightnessDelta =
-                                -deltaY / getScreenHeight() * 2 * gestureConfig.brightnessGestureSensitivity
-                            val newBrightness = (brightness + brightnessDelta).coerceIn(
-                                gestureConfig.brightnessMin,
-                                gestureConfig.brightnessMax
-                            )
-                            brightness = newBrightness // 更新本地亮度变量，确保后续计算基于最新值
-                            setBrightness(newBrightness)
-                            showBrightnessFeedback(newBrightness)
-                        }
+                when (currentGesture) {
+                    GestureType.BRIGHTNESS -> {
+                        // 亮度调节（上下滑动）
+                        val brightnessDelta = 
+                            -deltaY / getScreenHeight() * 2 * gestureConfig.brightnessGestureSensitivity
+                        val newBrightness = (brightness + brightnessDelta).coerceIn(
+                            gestureConfig.brightnessMin,
+                            gestureConfig.brightnessMax
+                        )
+                        brightness = newBrightness // 更新本地亮度变量，确保后续计算基于最新值
+                        setBrightness(newBrightness)
+                        showBrightnessFeedback(newBrightness)
+                    }
 
-                        GESTURE_VOLUME -> {
-                            // 音量调节（上下滑动）
-                            // 使用增量deltaY进行音量调节，这样可以更精确地控制音量变化
-                            val volumeDelta =
-                                -deltaY / getScreenHeight() * 2 * gestureConfig.volumeGestureSensitivity
-                            val newVolume = (volume + volumeDelta).coerceIn(
-                                gestureConfig.volumeMin,
-                                gestureConfig.volumeMax
-                            )
-                            volume = newVolume // 更新本地音量变量，确保后续计算基于最新值
-                            viewModel.setVolume(newVolume)
-                            showVolumeFeedback(newVolume)
-                        }
+                    GestureType.VOLUME -> {
+                        // 音量调节（上下滑动）
+                        // 使用增量deltaY进行音量调节，这样可以更精确地控制音量变化
+                        val volumeDelta = 
+                            -deltaY / getScreenHeight() * 2 * gestureConfig.volumeGestureSensitivity
+                        val newVolume = (volume + volumeDelta).coerceIn(
+                            gestureConfig.volumeMin,
+                            gestureConfig.volumeMax
+                        )
+                        volume = newVolume // 更新本地音量变量，确保后续计算基于最新值
+                        viewModel.setVolume(newVolume)
+                        showVolumeFeedback(newVolume)
+                    }
 
-                        GESTURE_PROGRESS -> {
-                            // 进度调节（左右滑动）
-                            val duration = viewModel.state.value.duration
+                    GestureType.PROGRESS -> {
+                        // 进度调节（左右滑动）
+                        val duration = viewModel.state.value.duration
 
-                            // 检查持续时间是否有效
-                            if (duration > 0) {
-                                // 计算总滑动距离（从初始位置到当前位置）
-                                val totalDeltaX = x - startX
-                                val progressDelta =
-                                    (totalDeltaX / getScreenWidth() * duration * gestureConfig.progressGestureSensitivity).toLong()
-                                val newProgress = (progress + progressDelta).coerceIn(0L, duration)
+                        // 检查持续时间是否有效
+                        if (duration > 0) {
+                            // 计算总滑动距离（从初始位置到当前位置）
+                            val totalDeltaX = x - startX
+                            val progressDelta = 
+                                (totalDeltaX / getScreenWidth() * duration * gestureConfig.progressGestureSensitivity).toLong()
+                            val newProgress = (progress + progressDelta).coerceIn(0L, duration)
 
-                                // 设置isDragging为true，避免updateControllerState覆盖我们的修改
-                                isDragging = true
+                            // 设置isDragging为true，避免updateControllerState覆盖我们的修改
+                            isDragging = true
 
-                                // 实时更新控制器进度条
-                                updateSeekBarProgress(newProgress, duration)
-                                showProgressFeedback(newProgress, duration)
+                            // 实时更新控制器进度条
+                            updateSeekBarProgress(newProgress, duration)
+                            showProgressFeedback(newProgress, duration)
 
-                                // 暂停自动隐藏控制器
-                                removeHideControllerTimer()
-                            }
+                            // 暂停自动隐藏控制器
+                            removeHideControllerTimer()
                         }
                     }
+                    else -> {}
+                }
 
                     lastX = x
                     lastY = y
@@ -337,33 +340,49 @@ class VideoController(
             val handled = gestureDetector.onTouchEvent(event)
 
             // 处理手势结束事件
-            if ((event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) && isLandscape) {
-                // 如果是进度调节手势，实际更新视频播放位置
-                if (currentGesture == GESTURE_PROGRESS) {
-                    // 使用初始位置和最终位置计算总滑动距离
-                    val totalDeltaX = event.x - startX
-                    val progressDelta =
-                        (totalDeltaX / getScreenWidth() * viewModel.state.value.duration * gestureConfig.progressGestureSensitivity).toLong()
-                    val finalProgress =
-                        (progress + progressDelta).coerceIn(0L, viewModel.state.value.duration)
-                    viewModel.seekTo(finalProgress)
-                    showProgressFeedback(finalProgress, viewModel.state.value.duration)
-                    updateSeekBarProgress(finalProgress, viewModel.state.value.duration)
-                }
-
-                // 重置手势状态
-                currentGesture = GESTURE_NONE
-                isDragging = false
-                resetHideGestureFeedbackTimer()
-
-                // 操作完成后，重启控制器自动隐藏
-                if (isVisible && viewModel.state.value.isPlaying) {
-                    resetHideControllerTimer()
-                }
+            if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+                handleGestureEnd(event)
             }
 
             return@setOnTouchListener handled
         }
+    }
+
+    /**
+     * 处理手势结束事件
+     */
+    private fun handleGestureEnd(event: MotionEvent) {
+        if (!isLandscape) return
+        
+        // 处理进度调节手势的结束
+        if (currentGesture == GestureType.PROGRESS) {
+            // 使用初始位置和最终位置计算总滑动距离
+            val totalDeltaX = event.x - startX
+            val progressDelta = 
+                (totalDeltaX / getScreenWidth() * viewModel.state.value.duration * gestureConfig.progressGestureSensitivity).toLong()
+            val finalProgress = 
+                (progress + progressDelta).coerceIn(0L, viewModel.state.value.duration)
+            viewModel.seekTo(finalProgress)
+            showProgressFeedback(finalProgress, viewModel.state.value.duration)
+            updateSeekBarProgress(finalProgress, viewModel.state.value.duration)
+        }
+
+        // 重置手势状态
+        resetGestureState()
+
+        // 操作完成后，重启控制器自动隐藏
+        if (isVisible && viewModel.state.value.isPlaying) {
+            resetHideControllerTimer()
+        }
+    }
+
+    /**
+     * 重置手势状态
+     */
+    private fun resetGestureState() {
+        currentGesture = GestureType.NONE
+        isDragging = false
+        hideGestureFeedback()
     }
 
     /**
@@ -489,12 +508,11 @@ class VideoController(
         removeHideGestureFeedbackTimer()
     }
 
-    // 移除handleTouchEvent方法，使用GestureDetector处理触摸事件
 
     /**
      * 获取手势类型
      */
-    private fun getGestureType(x: Float, y: Float): Int {
+    private fun getGestureType(x: Float, y: Float): GestureType {
         val width = binding.root.width
 
         // 计算点击区域
@@ -502,15 +520,15 @@ class VideoController(
 
         return when {
             x < areaWidth -> {
-                GESTURE_BRIGHTNESS
+                GestureType.BRIGHTNESS
             }
 
             x > width - areaWidth -> {
-                GESTURE_VOLUME
+                GestureType.VOLUME
             }
 
             else -> {
-                GESTURE_PROGRESS
+                GestureType.PROGRESS
             }
         }
     }

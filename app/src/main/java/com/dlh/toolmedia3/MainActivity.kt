@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         // 设置示例视频源（使用ExoPlayer官方示例视频）
         val videoUrl = "https://cdn.yzzy31-play.com/20260221/14914_d41b5422/index.m3u8"
         val videoTitle = "霹雳神鹰"
-        videoView.setCutoutAdapted(true)
+        videoView.setCutoutAdapted(false)
         // 预加载视频
         videoView.preloadVideo(videoUrl, videoTitle)
         
