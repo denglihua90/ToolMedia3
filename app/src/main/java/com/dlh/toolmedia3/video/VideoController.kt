@@ -312,7 +312,15 @@ class VideoController(
 
         // 播放速度按钮
         binding.btnSpeed.setOnClickListener {
-            // 这里可以显示播放速度选择对话框
+            // 显示播放速度选择对话框
+            showSpeedDialog()
+            resetHideControllerTimer()
+        }
+
+        // 底部播放速度按钮
+        binding.btnSpeedIv.setOnClickListener {
+            // 显示播放速度选择对话框
+            showSpeedDialog()
             resetHideControllerTimer()
         }
 
@@ -506,6 +514,26 @@ class VideoController(
     fun destroy() {
         removeHideControllerTimer()
         removeHideGestureFeedbackTimer()
+    }
+
+    /**
+     * 显示播放速度选择对话框
+     */
+    private fun showSpeedDialog() {
+        val speeds = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
+        val speedValues = arrayOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
+        
+        val builder = android.app.AlertDialog.Builder(context)
+        builder.setTitle("选择播放速度")
+        builder.setItems(speeds) { dialog, which ->
+            val selectedSpeed = speedValues[which]
+            viewModel.setPlaybackSpeed(selectedSpeed)
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("取消") { dialog, _ ->
+            dialog.dismiss()
+        }
+        builder.show()
     }
 
 

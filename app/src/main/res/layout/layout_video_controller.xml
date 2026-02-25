@@ -13,8 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:padding="10dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -149,6 +149,36 @@
                     android:scaleType="centerInside"
                     android:src="@drawable/baseline_play_arrow_24"
                     app:tint="@android:color/white" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/btn_fullscreen"
+                    android:layout_toRightOf="@+id/btn_play_pause"
+                    android:background="@android:color/transparent"
+                    android:gravity="right">
+
+                    <TextView
+                        android:id="@+id/tv_selections"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:text="选集"
+                        android:layout_marginRight="12dp"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:id="@+id/btn_speed_iv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="12dp"
+                        android:background="@android:color/transparent"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/baseline_speed_24" />
+
+
+                </LinearLayout>
 
                 <ImageView
                     android:id="@+id/btn_fullscreen"
