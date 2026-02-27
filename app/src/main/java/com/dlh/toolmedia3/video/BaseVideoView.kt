@@ -188,7 +188,11 @@ open class BaseVideoView  @JvmOverloads constructor(
                     if (isFullScreen != screenController.isFullScreen()) {
                         // 传递当前BaseVideoView作为播放器容器
                         screenController.toggleFullScreen(this@BaseVideoView, it.isCutoutAdapted)
-
+                        
+                        // 退出全屏时解锁屏幕
+                        if (!isFullScreen) {
+                            videoController.unlockScreen()
+                        }
                     }
                     
                     // 画中画状态变化

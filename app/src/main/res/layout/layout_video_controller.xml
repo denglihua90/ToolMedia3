@@ -42,41 +42,54 @@
                 android:textColor="@android:color/white"
                 android:textSize="16sp" />
 
-            <ImageView
-                android:id="@+id/btn_quality"
+            <TextView
+                android:id="@+id/tv_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:scaleType="centerInside"
-                android:src="@android:drawable/ic_menu_sort_by_size"
-                app:tint="@android:color/white" />
+                android:gravity="center_vertical"
+                android:padding="10dp"
+                android:text="00:00"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
 
             <ImageView
-                android:id="@+id/btn_speed"
+                android:id="@+id/iv_battery"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:scaleType="centerInside"
-                android:src="@android:drawable/ic_menu_manage"
+                android:scaleType="center"
+                android:src="@drawable/baseline_battery_full_24"
                 app:tint="@android:color/white" />
 
+            <TextView
+                android:id="@+id/tv_battery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="90%"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
         </LinearLayout>
 
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/btn_lock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|left"
+        android:layout_marginLeft="16dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/baseline_lock_open_24"
+        app:tint="@android:color/white" />
     <!-- 中间播放/暂停按钮 -->
-
-    <!-- 底部控制器 -->
     <LinearLayout
         android:id="@+id/center_controller"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
         android:orientation="vertical">
 
 
     </LinearLayout>
-
+    <!-- 底部控制器 -->
     <LinearLayout
         android:id="@+id/bottom_controller"
         android:layout_width="match_parent"
@@ -162,9 +175,9 @@
                         android:id="@+id/tv_selections"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginRight="12dp"
                         android:background="@android:color/transparent"
                         android:text="选集"
-                        android:layout_marginRight="12dp"
                         android:textColor="@android:color/white"
                         android:textSize="16sp" />
 

@@ -2,7 +2,11 @@ package com.dlh.toolmedia3.video
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.graphics.Rect
+import android.os.BatteryManager
 import android.os.Handler
 import android.os.Looper
 import android.view.GestureDetector
@@ -14,8 +18,13 @@ import androidx.lifecycle.LifecycleOwner
 import com.dlh.toolmedia3.R
 import com.dlh.toolmedia3.architecture.viewmodel.PlayerViewModel
 import com.dlh.toolmedia3.databinding.LayoutVideoControllerBinding
-import com.dlh.toolmedia3.utils.CutoutUtil.allowDisplayToCutout
 import com.dlh.toolmedia3.utils.PlayerUtils
+import com.lxj.xpopup.XPopup
+import com.lxj.xpopup.core.BubbleAttachPopupView
+import com.lxj.xpopup.enums.PopupAnimation
+import com.lxj.xpopup.enums.PopupPosition
+import java.text.SimpleDateFormat
+import java.util.*
 
 @androidx.media3.common.util.UnstableApi
 
@@ -48,9 +57,17 @@ class VideoController(
     private var progress = 0L
     private var hideGestureFeedbackRunnable = Runnable { hideGestureFeedback() }
 
+    // 锁屏状态
+    private var isScreenLocked = false
+
     // 手势检测器
     private val gestureDetector: GestureDetector
     private var isLandscape = false // 是否为横屏模式
+
+    // 时间和电量显示相关
+    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private var timeUpdateRunnable: Runnable? = null
+    private var batteryReceiver: BatteryReceiver? = null
 
     // 手势类型枚举
     enum class GestureType {
@@ -128,74 +145,75 @@ class VideoController(
                         Math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
 
                     // 如果滑动距离超过阈值，才认为是手势操作
-                if (swipeDistance > gestureConfig.gestureThreshold && currentGesture == GestureType.NONE) {
-                    // 根据滑动方向和位置确定手势类型
-                    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-                        // 上下滑动
-                        if (gestureConfig.enableVerticalSwipe) {
-                            currentGesture = getGestureType(x, y)
-                        }
-                    } else {
-                        // 左右滑动
-                        if (gestureConfig.enableHorizontalSwipe) {
-                            currentGesture = GestureType.PROGRESS
-                        }
-                    }
-                }
-
-                when (currentGesture) {
-                    GestureType.BRIGHTNESS -> {
-                        // 亮度调节（上下滑动）
-                        val brightnessDelta = 
-                            -deltaY / getScreenHeight() * 2 * gestureConfig.brightnessGestureSensitivity
-                        val newBrightness = (brightness + brightnessDelta).coerceIn(
-                            gestureConfig.brightnessMin,
-                            gestureConfig.brightnessMax
-                        )
-                        brightness = newBrightness // 更新本地亮度变量，确保后续计算基于最新值
-                        setBrightness(newBrightness)
-                        showBrightnessFeedback(newBrightness)
-                    }
-
-                    GestureType.VOLUME -> {
-                        // 音量调节（上下滑动）
-                        // 使用增量deltaY进行音量调节，这样可以更精确地控制音量变化
-                        val volumeDelta = 
-                            -deltaY / getScreenHeight() * 2 * gestureConfig.volumeGestureSensitivity
-                        val newVolume = (volume + volumeDelta).coerceIn(
-                            gestureConfig.volumeMin,
-                            gestureConfig.volumeMax
-                        )
-                        volume = newVolume // 更新本地音量变量，确保后续计算基于最新值
-                        viewModel.setVolume(newVolume)
-                        showVolumeFeedback(newVolume)
-                    }
-
-                    GestureType.PROGRESS -> {
-                        // 进度调节（左右滑动）
-                        val duration = viewModel.state.value.duration
-
-                        // 检查持续时间是否有效
-                        if (duration > 0) {
-                            // 计算总滑动距离（从初始位置到当前位置）
-                            val totalDeltaX = x - startX
-                            val progressDelta = 
-                                (totalDeltaX / getScreenWidth() * duration * gestureConfig.progressGestureSensitivity).toLong()
-                            val newProgress = (progress + progressDelta).coerceIn(0L, duration)
-
-                            // 设置isDragging为true，避免updateControllerState覆盖我们的修改
-                            isDragging = true
-
-                            // 实时更新控制器进度条
-                            updateSeekBarProgress(newProgress, duration)
-                            showProgressFeedback(newProgress, duration)
-
-                            // 暂停自动隐藏控制器
-                            removeHideControllerTimer()
+                    if (swipeDistance > gestureConfig.gestureThreshold && currentGesture == GestureType.NONE) {
+                        // 根据滑动方向和位置确定手势类型
+                        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                            // 上下滑动
+                            if (gestureConfig.enableVerticalSwipe) {
+                                currentGesture = getGestureType(x, y)
+                            }
+                        } else {
+                            // 左右滑动
+                            if (gestureConfig.enableHorizontalSwipe) {
+                                currentGesture = GestureType.PROGRESS
+                            }
                         }
                     }
-                    else -> {}
-                }
+
+                    when (currentGesture) {
+                        GestureType.BRIGHTNESS -> {
+                            // 亮度调节（上下滑动）
+                            val brightnessDelta =
+                                -deltaY / getScreenHeight() * 2 * gestureConfig.brightnessGestureSensitivity
+                            val newBrightness = (brightness + brightnessDelta).coerceIn(
+                                gestureConfig.brightnessMin,
+                                gestureConfig.brightnessMax
+                            )
+                            brightness = newBrightness // 更新本地亮度变量，确保后续计算基于最新值
+                            setBrightness(newBrightness)
+                            showBrightnessFeedback(newBrightness)
+                        }
+
+                        GestureType.VOLUME -> {
+                            // 音量调节（上下滑动）
+                            // 使用增量deltaY进行音量调节，这样可以更精确地控制音量变化
+                            val volumeDelta =
+                                -deltaY / getScreenHeight() * 2 * gestureConfig.volumeGestureSensitivity
+                            val newVolume = (volume + volumeDelta).coerceIn(
+                                gestureConfig.volumeMin,
+                                gestureConfig.volumeMax
+                            )
+                            volume = newVolume // 更新本地音量变量，确保后续计算基于最新值
+                            viewModel.setVolume(newVolume)
+                            showVolumeFeedback(newVolume)
+                        }
+
+                        GestureType.PROGRESS -> {
+                            // 进度调节（左右滑动）
+                            val duration = viewModel.state.value.duration
+
+                            // 检查持续时间是否有效
+                            if (duration > 0) {
+                                // 计算总滑动距离（从初始位置到当前位置）
+                                val totalDeltaX = x - startX
+                                val progressDelta =
+                                    (totalDeltaX / getScreenWidth() * duration * gestureConfig.progressGestureSensitivity).toLong()
+                                val newProgress = (progress + progressDelta).coerceIn(0L, duration)
+
+                                // 设置isDragging为true，避免updateControllerState覆盖我们的修改
+                                isDragging = true
+
+                                // 实时更新控制器进度条
+                                updateSeekBarProgress(newProgress, duration)
+                                showProgressFeedback(newProgress, duration)
+
+                                // 暂停自动隐藏控制器
+                                removeHideControllerTimer()
+                            }
+                        }
+
+                        else -> {}
+                    }
 
                     lastX = x
                     lastY = y
@@ -225,6 +243,8 @@ class VideoController(
         initViews()
         initListeners()
         updateControllerVisibility(true)
+        startTimeUpdate()
+        startBatteryMonitoring()
     }
 
     /**
@@ -240,12 +260,11 @@ class VideoController(
     private fun initViews() {
         // 初始化进度条
         binding.seekBar.max = 100
-        
+
         // 设置返回按钮初始可见性为显示
         binding.btnBack.visibility = View.VISIBLE
 
     }
-    
 
 
     /**
@@ -295,28 +314,6 @@ class VideoController(
             resetHideControllerTimer()
         }
 
-        // 清晰度按钮
-        binding.btnQuality.setOnClickListener {
-            viewModel.loadQualities()
-            // 显示清晰度选择对话框
-            val qualities = viewModel.state.value.availableQualities
-            val currentQuality = viewModel.state.value.currentQuality
-            if (qualities.isNotEmpty()) {
-                val dialog = QualityDialog(context, qualities, currentQuality) {
-                    viewModel.changeQuality(it)
-                }
-                dialog.show()
-            }
-            resetHideControllerTimer()
-        }
-
-        // 播放速度按钮
-        binding.btnSpeed.setOnClickListener {
-            // 显示播放速度选择对话框
-            showSpeedDialog()
-            resetHideControllerTimer()
-        }
-
         // 底部播放速度按钮
         binding.btnSpeedIv.setOnClickListener {
             // 显示播放速度选择对话框
@@ -324,18 +321,24 @@ class VideoController(
             resetHideControllerTimer()
         }
 
+        // 锁屏按钮
+        binding.btnLock.setOnClickListener {
+            toggleScreenLock()
+            resetHideControllerTimer()
+        }
+
         // 返回按钮
         binding.btnBack.setOnClickListener {
             val isFullScreen = viewModel.state.value.isFullScreen
             val activity = PlayerUtils.scanForActivity(context)
-            
+
             if (isFullScreen) {
                 // 全屏状态：退出全屏
                 viewModel.toggleFullScreen()
             } else if (isLandscape) {
                 // 横屏状态：切换到竖屏
                 activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            }else {
+            } else {
                 // 非全屏/横屏状态：退出应用
                 activity?.finish()
             }
@@ -344,6 +347,19 @@ class VideoController(
 
         // 触摸事件监听器（用于手势操作）
         binding.root.setOnTouchListener { v, event ->
+            // 锁屏状态下拦截触摸事件
+            if (isScreenLocked) {
+                // 检查是否点击了锁屏按钮
+                val lockButtonRect = Rect()
+                binding.btnLock.getHitRect(lockButtonRect)
+                if (lockButtonRect.contains(event.x.toInt(), event.y.toInt())) {
+                    // 允许点击锁屏按钮
+                    return@setOnTouchListener false
+                }
+                // 拦截其他所有触摸事件
+                return@setOnTouchListener true
+            }
+
             // 使用手势检测器处理触摸事件
             val handled = gestureDetector.onTouchEvent(event)
 
@@ -361,14 +377,14 @@ class VideoController(
      */
     private fun handleGestureEnd(event: MotionEvent) {
         if (!isLandscape) return
-        
+
         // 处理进度调节手势的结束
         if (currentGesture == GestureType.PROGRESS) {
             // 使用初始位置和最终位置计算总滑动距离
             val totalDeltaX = event.x - startX
-            val progressDelta = 
+            val progressDelta =
                 (totalDeltaX / getScreenWidth() * viewModel.state.value.duration * gestureConfig.progressGestureSensitivity).toLong()
-            val finalProgress = 
+            val finalProgress =
                 (progress + progressDelta).coerceIn(0L, viewModel.state.value.duration)
             viewModel.seekTo(finalProgress)
             showProgressFeedback(finalProgress, viewModel.state.value.duration)
@@ -427,6 +443,9 @@ class VideoController(
         } else {
             binding.btnFullscreen.setImageResource(R.drawable.baseline_fullscreen_24)
         }
+
+        // 更新锁屏按钮显示状态
+        updateLockButtonVisibility()
     }
 
     /**
@@ -471,6 +490,14 @@ class VideoController(
 //        binding.centerController.visibility = visibility
         binding.bottomController.visibility = visibility
 
+        // 锁屏按钮、时间和电量只在全屏或横屏时显示
+        val isFullScreen = viewModel.state.value.isFullScreen
+        val shouldShowLockButton = isFullScreen || isLandscape
+        binding.btnLock.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.tvTime.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.ivBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.tvBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+
         onControllerVisibilityChanged?.invoke(visible)
 
     }
@@ -506,6 +533,20 @@ class VideoController(
         this.isLandscape = isLandscape
         // 控制返回按钮的显示/隐藏
         binding.btnBack.visibility = View.VISIBLE
+        // 更新锁屏按钮显示状态
+        updateLockButtonVisibility()
+    }
+
+    /**
+     * 更新锁屏按钮显示状态
+     */
+    private fun updateLockButtonVisibility() {
+        val isFullScreen = viewModel.state.value.isFullScreen
+        val shouldShowLockButton = isFullScreen || isLandscape
+        binding.btnLock.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.tvTime.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.ivBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.tvBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
     }
 
     /**
@@ -514,26 +555,166 @@ class VideoController(
     fun destroy() {
         removeHideControllerTimer()
         removeHideGestureFeedbackTimer()
+        stopTimeUpdate()
+        stopBatteryMonitoring()
+    }
+
+    /**
+     * 开始时间更新
+     */
+    private fun startTimeUpdate() {
+        timeUpdateRunnable = object : Runnable {
+            override fun run() {
+                updateTime()
+                handler.postDelayed(this, 1000) // 每秒更新一次
+            }
+        }
+        timeUpdateRunnable?.let { handler.post(it) }
+    }
+
+    /**
+     * 停止时间更新
+     */
+    private fun stopTimeUpdate() {
+        timeUpdateRunnable?.let { handler.removeCallbacks(it) }
+        timeUpdateRunnable = null
+    }
+
+    /**
+     * 更新时间显示
+     */
+    private fun updateTime() {
+        val currentTime = timeFormat.format(Date())
+        binding.tvTime.text = currentTime
+    }
+
+    /**
+     * 开始电池状态监听
+     */
+    private fun startBatteryMonitoring() {
+        batteryReceiver = BatteryReceiver()
+        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        context.registerReceiver(batteryReceiver, intentFilter)
+    }
+
+    /**
+     * 停止电池状态监听
+     */
+    private fun stopBatteryMonitoring() {
+        batteryReceiver?.let { context.unregisterReceiver(it) }
+        batteryReceiver = null
+    }
+
+    /**
+     * 更新电池显示
+     */
+    private fun updateBattery(level: Int, scale: Int) {
+        val batteryPercent = (level * 100 / scale)
+        binding.tvBattery.text = "${batteryPercent}%"
+
+        // 根据电量百分比更新电池图标
+        val batteryIcon = when {
+            batteryPercent >= 90 -> R.drawable.baseline_battery_full_24
+            batteryPercent >= 80 -> R.drawable.baseline_battery_6_bar_24
+            batteryPercent >= 65 -> R.drawable.baseline_battery_5_bar_24
+            batteryPercent >= 50 -> R.drawable.baseline_battery_4_bar_24
+            batteryPercent >= 35 -> R.drawable.baseline_battery_3_bar_24
+            batteryPercent >= 20 -> R.drawable.baseline_battery_2_bar_24
+            batteryPercent >= 10 -> R.drawable.baseline_battery_1_bar_24
+            else -> R.drawable.baseline_battery_0_bar_24
+        }
+        binding.ivBattery.setImageResource(batteryIcon)
+    }
+
+    /**
+     * 电池广播接收器
+     */
+    private inner class BatteryReceiver : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            intent?.let {
+                val level = it.getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
+                val scale = it.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+                updateBattery(level, scale)
+            }
+        }
     }
 
     /**
      * 显示播放速度选择对话框
      */
     private fun showSpeedDialog() {
-        val speeds = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
-        val speedValues = arrayOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
-        
-        val builder = android.app.AlertDialog.Builder(context)
-        builder.setTitle("选择播放速度")
-        builder.setItems(speeds) { dialog, which ->
-            val selectedSpeed = speedValues[which]
-            viewModel.setPlaybackSpeed(selectedSpeed)
-            dialog.dismiss()
+        // 创建从右边弹出的倍速选择弹窗
+        XPopup.Builder(context)
+
+//            .popupAnimation(PopupAnimation.TranslateFromRight) // 从右边滑入动画
+
+            .popupPosition(PopupPosition.Right) // 弹窗位置在右边
+
+            .popupWidth(binding.root.width / 3)
+            .popupHeight(binding.root.height)
+            .offsetY(95)
+            .asCustom(CustomDrawerPopupView(context, binding.root.width / 3, binding.root.height))
+
+            .show()
+
+    }
+
+    /**
+     * 切换屏幕锁定状态
+     */
+    private fun toggleScreenLock() {
+        isScreenLocked = !isScreenLocked
+        updateLockButtonIcon()
+        showLockStatusFeedback()
+
+        // 锁屏后隐藏控制器，解锁后显示控制器
+        if (isScreenLocked) {
+            hideController()
+        } else {
+            showController()
         }
-        builder.setNegativeButton("取消") { dialog, _ ->
-            dialog.dismiss()
+    }
+
+    /**
+     * 更新锁屏按钮图标
+     */
+    private fun updateLockButtonIcon() {
+        if (isScreenLocked) {
+            binding.btnLock.setImageResource(R.drawable.baseline_lock_24)
+        } else {
+            binding.btnLock.setImageResource(R.drawable.baseline_lock_open_24)
         }
-        builder.show()
+    }
+
+    /**
+     * 显示锁屏状态提示
+     */
+    private fun showLockStatusFeedback() {
+        if (isScreenLocked) {
+            showLockFeedback("已锁屏")
+        } else {
+            showLockFeedback("已解锁")
+        }
+    }
+
+    /**
+     * 显示锁屏相关的反馈信息
+     */
+    private fun showLockFeedback(message: String) {
+        binding.ivIcon.setImageResource(if (isScreenLocked) R.drawable.baseline_lock_24 else R.drawable.baseline_lock_open_24)
+        binding.tvPercent.text = message
+        binding.proPercent.visibility = View.GONE
+        showGestureFeedback()
+    }
+
+    /**
+     * 解锁屏幕
+     */
+    fun unlockScreen() {
+        if (isScreenLocked) {
+            isScreenLocked = false
+            updateLockButtonIcon()
+        }
     }
 
 
@@ -607,7 +788,7 @@ class VideoController(
 
         // 设置进度条
         binding.proPercent.progress = percent
-
+        binding.proPercent.visibility = View.VISIBLE
         // 显示反馈
         showGestureFeedback()
     }
@@ -626,7 +807,7 @@ class VideoController(
 
         // 设置进度条
         binding.proPercent.progress = percent
-
+        binding.proPercent.visibility = View.VISIBLE
         // 显示反馈
         showGestureFeedback()
     }
@@ -647,7 +828,7 @@ class VideoController(
 
         // 设置进度条
         binding.proPercent.progress = percent
-
+        binding.proPercent.visibility = View.VISIBLE
         // 显示反馈
         showGestureFeedback()
     }

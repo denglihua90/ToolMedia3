@@ -65,6 +65,8 @@ class MainActivity : AppCompatActivity() {
             // 保存状态到SharedPreferences
             sharedPreferences.edit().putBoolean(KEY_AUTO_SAVE_PROGRESS, false).apply()
         }
+
+        println("Kotlin version: ${KotlinVersion.CURRENT}")
     }
     
     private fun initVideoPlayer() {

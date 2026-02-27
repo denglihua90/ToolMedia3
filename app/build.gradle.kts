@@ -34,8 +34,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    
-
 }
 
 dependencies {
@@ -44,7 +42,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
+
     implementation(project(":DLHPlayer"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -77,5 +75,15 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
+
+    // XPopup库
+    implementation("com.github.li-xiaojun:XPopup:2.10.0") {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-android-extensions-runtime")
+    }
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    
+    // Epoxy库
+    implementation("com.airbnb.android:epoxy:5.2.0")
+    annotationProcessor("com.airbnb.android:epoxy-processor:5.2.0")
 
 }
