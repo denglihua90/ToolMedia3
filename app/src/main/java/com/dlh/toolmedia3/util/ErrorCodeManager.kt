@@ -152,16 +152,17 @@ object ErrorCodeManager {
     /**
      * 获取错误类型描述
      * 
+     * @param context 上下文对象，用于获取字符串资源
      * @param errorCode 错误代码
      * @return 错误类型描述
      */
-    fun getErrorType(errorCode: Int): String {
+    fun getErrorType(context: Context, errorCode: Int): String {
         return when {
-            isNetworkError(errorCode) -> "网络错误"
-            isDecodeError(errorCode) -> "解码错误"
-            isFormatError(errorCode) -> "格式错误"
-            isInitializationError(errorCode) -> "初始化错误"
-            else -> "未知错误"
+            isNetworkError(errorCode) -> context.getString(R.string.error_network)
+            isDecodeError(errorCode) -> context.getString(R.string.error_decode)
+            isFormatError(errorCode) -> context.getString(R.string.error_format_unsupported)
+            isInitializationError(errorCode) -> context.getString(R.string.error_initialization_failed)
+            else -> context.getString(R.string.error_unknown)
         }
     }
     

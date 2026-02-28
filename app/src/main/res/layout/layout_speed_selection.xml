@@ -1,24 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="300dp"
+    android:layout_height="@dimen/dp_300"
     android:orientation="vertical"
-    android:background="@android:color/holo_red_light"
-    android:padding="16dp">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="播放速度"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:gravity="center"
-        android:layout_marginBottom="20dp" />
-
+    android:background="@color/black_alpha_60"
+    android:padding="@dimen/dp_16">
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_speed"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+
         android:overScrollMode="never" />
 
 </LinearLayout>

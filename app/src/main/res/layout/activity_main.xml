@@ -10,7 +10,7 @@
     <com.dlh.toolmedia3.video.BaseVideoView
         android:id="@+id/videoView"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="@dimen/dp_250"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:padding="@dimen/dp_16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/videoView">
@@ -27,32 +27,32 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="请输入视频URL">
+            android:hint="@string/hint_video_url">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/text_input_video_url"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="https://v.cdnlz14.com/20231210/32560_e92c8ffe/index.m3u8"
-                android:textSize="14sp" />
+                android:textSize="@dimen/sp_14" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="20dp" />
+            android:layout_height="@dimen/dp_20" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_video"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="播放视频"
-            android:textSize="18sp"
+            android:layout_marginBottom="@dimen/dp_8"
+            android:text="@string/btn_play_video"
+            android:textSize="@dimen/sp_18"
             android:textStyle="bold" />
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="12dp" />
+            android:layout_height="@dimen/dp_12" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -64,8 +64,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="自动保存播放进度"
-                android:textSize="16sp" />
+                android:text="@string/auto_save_progress"
+                android:textSize="@dimen/sp_16" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_auto_save_progress"

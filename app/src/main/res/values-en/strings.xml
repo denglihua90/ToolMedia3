@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ToolMedia3</string>
+    
+    <!-- 错误信息 -->
+    <string name="error_network">Network error, please check your network connection</string>
+    <string name="error_decode">Video decoding error</string>
+    <string name="error_format_unsupported">Unsupported playback format</string>
+    <string name="error_source">Playback source error</string>
+    <string name="error_initialization_failed">Player initialization failed</string>
+    <string name="error_format_generic">Format error: %d</string>
+    <string name="error_initialization_generic">Initialization error: %d</string>
+    <string name="error_generic">Playback error: %d</string>
+    
+    <!-- HTTP 错误信息 -->
+    <string name="error_http_request" formatted="false">Request error: %d %s</string>
+    <string name="error_http_server" formatted="false">Server error: %d %s</string>
+    <string name="error_http_forbidden">Access denied, please check playback link permissions</string>
+    <string name="error_http_not_found">Playback resource not found</string>
+    <string name="error_http_timeout">Request timeout, please check your network connection</string>
+    <string name="error_http_generic" formatted="false">Network error: %d %s</string>
+    <string name="error_http_connection_failed">Network error: Connection failed</string>
+    <string name="error_http_cause">Network error: %s</string>
+    
+    <!-- 视频控制器 -->
+    <string name="video_title">Video Title</string>
+    <string name="time_default">00:00</string>
+    <string name="battery_default">90%</string>
+    <string name="select_episode">Select Episode</string>
+    <string name="locked">Locked</string>
+    <string name="unlocked">Unlocked</string>
+    
+    <!-- 加载视图 -->
+    <string name="progress_default">0%</string>
+    <string name="error_playback_failed">Playback failed, please retry</string>
+    <string name="retry_playback">Replay</string>
+    
+    <!-- 主界面 -->
+    <string name="hint_video_url">Please enter video URL</string>
+    <string name="btn_play_video">Play Video</string>
+    <string name="auto_save_progress">Auto save playback progress</string>
+    <string name="user_input_video">User Input Video</string>
+    
+    <!-- 错误信息 -->
+    <string name="error_unknown">Unknown error</string>
+    
+    <!-- 视频质量 -->
+    <string name="quality_smooth">Smooth</string>
+    <string name="quality_standard">Standard</string>
+    <string name="quality_high">High</string>
+    <string name="quality_super">Super</string>
+    <string name="quality_blue">Blue Ray</string>
+    
+    <!-- 下载通知 -->
+    <string name="download_channel_name">Download Notification</string>
+    <string name="download_channel_description">Video download status notification</string>
+    <string name="download_waiting">Waiting for download...</string>
+    <string name="download_paused">Paused</string>
+    <string name="download_completed">Download completed</string>
+    <string name="download_failed">Download failed</string>
+    <string name="download_canceled">Canceled</string>
+</resources>

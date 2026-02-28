@@ -82,8 +82,13 @@ dependencies {
     }
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     
-    // Epoxy库
-    implementation("com.airbnb.android:epoxy:5.2.0")
-    annotationProcessor("com.airbnb.android:epoxy-processor:5.2.0")
+    // BaseRecyclerViewAdapterHelper库
+    implementation("com.github.CymChad:BaseRecyclerViewAdapterHelper:3.0.4")
+    // 沉浸式状态栏和沉浸式导航栏管理: 对原库进行 Android 15、16 版本适配
+    // https://github.com/OCNYang/ImmersionBar
+    // 基础依赖包，必须要依赖
+    implementation("com.github.OCNYang.ImmersionBar:immersionbar:3.4.6")
+   // kotlin扩展（可选）
+    implementation("com.github.OCNYang.ImmersionBar:immersionbar-ktx:3.4.6")
 
 }

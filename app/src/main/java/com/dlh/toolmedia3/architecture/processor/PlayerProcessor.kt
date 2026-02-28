@@ -10,6 +10,7 @@ import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import com.dlh.toolmedia3.architecture.event.PlayerEvent
 import com.dlh.toolmedia3.architecture.intent.PlayerIntent
 import com.dlh.toolmedia3.architecture.state.PlayerState
+import com.dlh.toolmedia3.R
 import com.dlh.toolmedia3.util.ErrorCodeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -216,7 +217,13 @@ class PlayerProcessor(
     
     private fun handleLoadQualities(scope: CoroutineScope) {
         // 处理加载清晰度列表逻辑
-        val qualities = listOf("流畅", "标清", "高清", "超清", "蓝光")
+        val qualities = listOf(
+            context.getString(R.string.quality_smooth),
+            context.getString(R.string.quality_standard),
+            context.getString(R.string.quality_high),
+            context.getString(R.string.quality_super),
+            context.getString(R.string.quality_blue)
+        )
         _state.update { it.copy(availableQualities = qualities) }
     }
     

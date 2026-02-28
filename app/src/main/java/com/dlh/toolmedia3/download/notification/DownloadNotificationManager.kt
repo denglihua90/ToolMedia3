@@ -27,10 +27,10 @@ class DownloadNotificationManager(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "下载通知",
+                context.getString(R.string.download_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             )
-            channel.description = "视频下载状态通知"
+            channel.description = context.getString(R.string.download_channel_description)
             notificationManager?.createNotificationChannel(channel)
         }
     }
@@ -54,7 +54,7 @@ class DownloadNotificationManager(private val context: Context) {
         
         when (status) {
             DownloadStatus.PENDING -> {
-                builder.setContentText("等待下载...")
+                builder.setContentText(context.getString(R.string.download_waiting))
                     .setProgress(0, 0, true)
             }
             DownloadStatus.DOWNLOADING -> {
@@ -62,22 +62,22 @@ class DownloadNotificationManager(private val context: Context) {
                     .setProgress(100, progress, false)
             }
             DownloadStatus.PAUSED -> {
-                builder.setContentText("已暂停")
+                builder.setContentText(context.getString(R.string.download_paused))
                     .setProgress(100, progress, false)
                     .setOngoing(false)
             }
             DownloadStatus.COMPLETED -> {
-                builder.setContentText("下载完成")
+                builder.setContentText(context.getString(R.string.download_completed))
                     .setProgress(100, 100, false)
                     .setOngoing(false)
             }
             DownloadStatus.FAILED -> {
-                builder.setContentText("下载失败")
+                builder.setContentText(context.getString(R.string.download_failed))
                     .setProgress(0, 0, false)
                     .setOngoing(false)
             }
             DownloadStatus.CANCELLED -> {
-                builder.setContentText("已取消")
+                builder.setContentText(context.getString(R.string.download_canceled))
                     .setProgress(0, 0, false)
                     .setOngoing(false)
             }

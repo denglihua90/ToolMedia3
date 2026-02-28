@@ -1,5 +1,6 @@
 package com.dlh.toolmedia3
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -8,6 +9,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.dlh.toolmedia3.databinding.ActivityMainBinding
 import com.dlh.toolmedia3.video.BaseVideoView
+
 
 @androidx.media3.common.util.UnstableApi
 class MainActivity : AppCompatActivity() {
@@ -22,9 +24,11 @@ class MainActivity : AppCompatActivity() {
     // Key for auto save progress setting
     private val KEY_AUTO_SAVE_PROGRESS = "auto_save_progress"
     
+    @SuppressLint("ResourceType")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
@@ -32,7 +36,9 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        
+
+
+
         // 初始化视频播放器
         initVideoPlayer()
         
@@ -44,12 +50,12 @@ class MainActivity : AppCompatActivity() {
             // 非空检查
             if (videoUrl.isEmpty()) {
                 // 显示提示
-                Toast.makeText(this, "请输入视频URL", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.hint_video_url), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             
             // 使用获取的URL播放视频
-            val videoTitle = "用户输入视频"
+            val videoTitle = getString(R.string.user_input_video)
             videoView.setVideoSource(videoUrl, videoTitle)
             videoView.play()
         }

@@ -9,6 +9,7 @@ import android.graphics.Rect
 import android.os.BatteryManager
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -68,6 +69,7 @@ class VideoController(
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private var timeUpdateRunnable: Runnable? = null
     private var batteryReceiver: BatteryReceiver? = null
+    private  var mOffsetY=0
 
     // 手势类型枚举
     enum class GestureType {
@@ -444,6 +446,11 @@ class VideoController(
             binding.btnFullscreen.setImageResource(R.drawable.baseline_fullscreen_24)
         }
 
+        mOffsetY = if (state.isFullScreen) {
+            0
+        } else {
+            90
+        }
         // 更新锁屏按钮显示状态
         updateLockButtonVisibility()
     }
@@ -644,19 +651,24 @@ class VideoController(
      */
     private fun showSpeedDialog() {
         // 创建从右边弹出的倍速选择弹窗
+        val speedListView = SpeedListView(context, binding.root.height)
+        // 设置当前倍速
+        speedListView.currentSpeed = viewModel.state.value.playbackSpeed
+        // 设置倍速选择回调
+        speedListView.onSpeedSelectedCallback = { selectedSpeed ->
+            // 更新播放器的播放速度
+            viewModel.setPlaybackSpeed(selectedSpeed)
+        }
+        Log.e("offsetY","---->:$mOffsetY")
         XPopup.Builder(context)
-
-//            .popupAnimation(PopupAnimation.TranslateFromRight) // 从右边滑入动画
-
             .popupPosition(PopupPosition.Right) // 弹窗位置在右边
-
-            .popupWidth(binding.root.width / 3)
-            .popupHeight(binding.root.height)
-            .offsetY(95)
-            .asCustom(CustomDrawerPopupView(context, binding.root.width / 3, binding.root.height))
-
+            .popupWidth(binding.root.width / 2)
+            .hasStatusBar(true)
+            .hasShadowBg(true)
+            .hasStatusBarShadow(true)
+            .offsetY(mOffsetY)
+            .asCustom(speedListView)
             .show()
-
     }
 
     /**
@@ -691,9 +703,9 @@ class VideoController(
      */
     private fun showLockStatusFeedback() {
         if (isScreenLocked) {
-            showLockFeedback("已锁屏")
+            showLockFeedback(context.getString(R.string.locked))
         } else {
-            showLockFeedback("已解锁")
+            showLockFeedback(context.getString(R.string.unlocked))
         }
     }
 

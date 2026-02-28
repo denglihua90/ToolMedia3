@@ -1,6 +1,7 @@
 package com.dlh.toolmedia3.video;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -78,6 +79,7 @@ public class CustomDrawerPopupView extends DrawerPopupView {
             }else{
                 params.height = mH;
             }
+
 
             if(getPopupWidth()>0) params.width = getPopupWidth();
             if(getMaxWidth() > 0) params.width = Math.min(params.width, getMaxWidth());

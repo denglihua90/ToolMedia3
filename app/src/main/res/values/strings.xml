@@ -20,4 +20,44 @@
     <string name="error_http_generic" formatted="false">网络错误: %d %s</string>
     <string name="error_http_connection_failed">网络错误: 连接失败</string>
     <string name="error_http_cause">网络错误: %s</string>
+    
+    <!-- 视频控制器 -->
+    <string name="video_title">视频标题</string>
+    <string name="time_default">00:00</string>
+    <string name="battery_default">90%</string>
+    <string name="select_episode">选集</string>
+    
+    <!-- 加载视图 -->
+    <string name="progress_default">0%</string>
+    <string name="error_playback_failed">播放出错，请重试</string>
+    <string name="retry_playback">重新播放</string>
+    
+    <!-- 主界面 -->
+    <string name="hint_video_url">请输入视频URL</string>
+    <string name="btn_play_video">播放视频</string>
+    <string name="auto_save_progress">自动保存播放进度</string>
+    <string name="user_input_video">用户输入视频</string>
+    
+    <!-- 视频控制器 -->
+    <string name="locked">已锁屏</string>
+    <string name="unlocked">已解锁</string>
+    
+    <!-- 错误信息 -->
+    <string name="error_unknown">未知错误</string>
+    
+    <!-- 视频质量 -->
+    <string name="quality_smooth">流畅</string>
+    <string name="quality_standard">标清</string>
+    <string name="quality_high">高清</string>
+    <string name="quality_super">超清</string>
+    <string name="quality_blue">蓝光</string>
+    
+    <!-- 下载通知 -->
+    <string name="download_channel_name">下载通知</string>
+    <string name="download_channel_description">视频下载状态通知</string>
+    <string name="download_waiting">等待下载...</string>
+    <string name="download_paused">已暂停</string>
+    <string name="download_completed">下载完成</string>
+    <string name="download_failed">下载失败</string>
+    <string name="download_canceled">已取消</string>
 </resources>
