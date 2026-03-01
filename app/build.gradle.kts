@@ -91,4 +91,29 @@ dependencies {
    // kotlin扩展（可选）
     implementation("com.github.OCNYang.ImmersionBar:immersionbar-ktx:3.4.6")
 
+    // Room 依赖
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    
+    // SQLCipher 依赖（用于数据库加密）
+    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    
+    // 测试依赖
+    testImplementation("androidx.room:room-testing:2.6.1")
+
+    // 核心网络库
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // 工具库
+    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+
+    // 缓存库
+    implementation("com.jakewharton:disklrucache:2.0.2")
+
 }

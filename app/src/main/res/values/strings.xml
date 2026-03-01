@@ -10,7 +10,8 @@
     <string name="error_format_generic">格式错误: %d</string>
     <string name="error_initialization_generic">初始化错误: %d</string>
     <string name="error_generic">播放错误: %d</string>
-    
+    <string name="error_unknown">未知错误</string>
+
     <!-- HTTP 错误信息 -->
     <string name="error_http_request" formatted="false">请求错误: %d %s</string>
     <string name="error_http_server" formatted="false">服务器错误: %d %s</string>
@@ -26,7 +27,9 @@
     <string name="time_default">00:00</string>
     <string name="battery_default">90%</string>
     <string name="select_episode">选集</string>
-    
+    <string name="select_speed">倍速</string>
+    <string name="locked">已锁屏</string>
+    <string name="unlocked">已解锁</string>
     <!-- 加载视图 -->
     <string name="progress_default">0%</string>
     <string name="error_playback_failed">播放出错，请重试</string>
@@ -37,13 +40,7 @@
     <string name="btn_play_video">播放视频</string>
     <string name="auto_save_progress">自动保存播放进度</string>
     <string name="user_input_video">用户输入视频</string>
-    
-    <!-- 视频控制器 -->
-    <string name="locked">已锁屏</string>
-    <string name="unlocked">已解锁</string>
-    
-    <!-- 错误信息 -->
-    <string name="error_unknown">未知错误</string>
+
     
     <!-- 视频质量 -->
     <string name="quality_smooth">流畅</string>
