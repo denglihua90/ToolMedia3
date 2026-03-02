@@ -211,6 +211,9 @@
     <color name="md_theme_outline">#9E9E9E</color>          <!-- 轮廓色：中灰 -->
     <color name="md_theme_outlineVariant">#E0E0E0</color>   <!-- 轮廓变体：浅灰 -->
 
+    <!-- 文本颜色 -->
+    <color name="text_primary">#000000</color>             <!-- 主要文本颜色：纯黑 -->
+
     <!-- 遮罩（半透黑，用于弹窗遮罩） -->
     <color name="md_theme_scrim">#80000000</color>
 

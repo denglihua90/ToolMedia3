@@ -323,6 +323,13 @@ class VideoController(
             resetHideControllerTimer()
         }
 
+        // 选集按钮
+        binding.btnSelections.setOnClickListener {
+            // 显示选集对话框
+            showEpisodeDialog()
+            resetHideControllerTimer()
+        }
+
         // 锁屏按钮
         binding.btnLock.setOnClickListener {
             toggleScreenLock()
@@ -497,13 +504,14 @@ class VideoController(
 //        binding.centerController.visibility = visibility
         binding.bottomController.visibility = visibility
 
-        // 锁屏按钮、时间和电量只在全屏或横屏时显示
+        // 锁屏按钮、时间、电量和选集按钮只在全屏或横屏时显示
         val isFullScreen = viewModel.state.value.isFullScreen
         val shouldShowLockButton = isFullScreen || isLandscape
         binding.btnLock.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.tvTime.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.ivBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.tvBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.btnSelections.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
 
         onControllerVisibilityChanged?.invoke(visible)
 
@@ -554,6 +562,7 @@ class VideoController(
         binding.tvTime.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.ivBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.tvBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        binding.btnSelections.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
     }
 
     /**
@@ -668,6 +677,31 @@ class VideoController(
             .hasStatusBarShadow(true)
             .offsetY(mOffsetY)
             .asCustom(speedListView)
+            .show()
+    }
+
+    /**
+     * 显示选集对话框
+     */
+    private fun showEpisodeDialog() {
+        // 创建从右边弹出的选集选择弹窗
+        val selectEpisodeView = SelectEpisodeView(context, binding.root.height)
+        // 设置当前选集
+        selectEpisodeView.currentEpisode = 1 // 示例：默认选中第1集
+        // 设置选集选择回调
+        selectEpisodeView.onEpisodeSelectedCallback = { selectedEpisode ->
+            // 处理选集选择逻辑
+            // 这里可以根据选中的集数更新播放器状态
+            Log.d("VideoController", "Selected episode: $selectedEpisode")
+        }
+        XPopup.Builder(context)
+            .popupPosition(PopupPosition.Right) // 弹窗位置在右边
+            .popupWidth(binding.root.width / 2)
+            .hasStatusBar(true)
+            .hasShadowBg(true)
+            .hasStatusBarShadow(true)
+            .offsetY(mOffsetY)
+            .asCustom(selectEpisodeView)
             .show()
     }
 

@@ -10,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.util.UnstableApi
 import com.dlh.toolmedia3.R
 import com.dlh.toolmedia3.databinding.ActivityMainBinding
+import com.dlh.toolmedia3.utils.StatusBarUtil
 import com.dlh.toolmedia3.video.BaseVideoView
 
 @UnstableApi
@@ -29,7 +30,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
+        StatusBarUtil.immersiveStatusBar(this, window.statusBarColor)
 
 
         // 初始化视频播放器

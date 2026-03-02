@@ -40,7 +40,16 @@
         <!-- 状态栏适配：黑色状态栏 + 浅色文字 -->
         <item name="android:statusBarColor" tools:targetApi="l">@android:color/black</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+
     </style>
 
-    <style name="Theme.ToolMedia3" parent="Base.Theme.ToolMedia3" />
+    <style name="Theme.ToolMedia3" parent="Base.Theme.ToolMedia3" >
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@color/white</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+
 </resources>

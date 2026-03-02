@@ -173,25 +173,25 @@
                     android:background="@color/transparent"
                     android:gravity="right">
 
-                    <Button
-                        android:id="@+id/tv_selections"
-                        android:layout_width="wrap_content"
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btn_selections"
+                        android:layout_width="@dimen/dp_50"
                         android:layout_height="wrap_content"
                         android:background="@color/transparent"
                         android:text="@string/select_episode"
                         android:textColor="@color/white"
-                        android:textSize="@dimen/sp_16" />
+                        android:textSize="@dimen/sp_14" />
 
-                    <Button
+                    <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btn_speed_iv"
-                        android:layout_width="wrap_content"
+                        android:layout_width="@dimen/dp_50"
                         android:layout_height="wrap_content"
                         android:background="@color/transparent"
                         android:scaleType="centerInside"
                         android:src="@drawable/baseline_speed_24"
+                        android:text="@string/select_speed"
                         android:textColor="@color/white"
-                        android:text="@string/select_episode"
-                        android:textSize="@dimen/sp_16" />
+                        android:textSize="@dimen/sp_14" />
 
 
                 </LinearLayout>
