@@ -19,10 +19,8 @@ import androidx.lifecycle.LifecycleOwner
 import com.dlh.toolmedia3.R
 import com.dlh.toolmedia3.architecture.viewmodel.PlayerViewModel
 import com.dlh.toolmedia3.databinding.LayoutVideoControllerBinding
-import com.dlh.toolmedia3.utils.PlayerUtils
+import com.dlh.toolmedia3.util.PlayerUtils
 import com.lxj.xpopup.XPopup
-import com.lxj.xpopup.core.BubbleAttachPopupView
-import com.lxj.xpopup.enums.PopupAnimation
 import com.lxj.xpopup.enums.PopupPosition
 import java.text.SimpleDateFormat
 import java.util.*
@@ -64,6 +62,7 @@ class VideoController(
     // 手势检测器
     private val gestureDetector: GestureDetector
     private var isLandscape = false // 是否为横屏模式
+    private var isShowSelectionsInLandscape: Boolean = true // 是否在横屏模式下显示选集按钮
 
     // 时间和电量显示相关
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -504,14 +503,17 @@ class VideoController(
 //        binding.centerController.visibility = visibility
         binding.bottomController.visibility = visibility
 
-        // 锁屏按钮、时间、电量和选集按钮只在全屏或横屏时显示
+        // 锁屏按钮、时间、电量只在全屏或横屏时显示
         val isFullScreen = viewModel.state.value.isFullScreen
         val shouldShowLockButton = isFullScreen || isLandscape
         binding.btnLock.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.tvTime.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.ivBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.tvBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
-        binding.btnSelections.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        
+        // 选集按钮只在全屏或横屏且设置为显示时显示
+        val shouldShowSelections = (isFullScreen || isLandscape) && isShowSelectionsInLandscape
+        binding.btnSelections.visibility = if (shouldShowSelections) View.VISIBLE else View.GONE
 
         onControllerVisibilityChanged?.invoke(visible)
 
@@ -562,7 +564,10 @@ class VideoController(
         binding.tvTime.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.ivBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
         binding.tvBattery.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
-        binding.btnSelections.visibility = if (shouldShowLockButton) View.VISIBLE else View.GONE
+        
+        // 选集按钮只在全屏或横屏且设置为显示时显示
+        val shouldShowSelections = (isFullScreen || isLandscape) && isShowSelectionsInLandscape
+        binding.btnSelections.visibility = if (shouldShowSelections) View.VISIBLE else View.GONE
     }
 
     /**
@@ -761,6 +766,15 @@ class VideoController(
             isScreenLocked = false
             updateLockButtonIcon()
         }
+    }
+    
+    /**
+     * 设置是否在横屏模式下显示选集按钮
+     */
+    fun setShowSelectionsInLandscape(enabled: Boolean) {
+        isShowSelectionsInLandscape = enabled
+        // 更新控制器可见性，使设置生效
+        updateControllerVisibility(isVisible)
     }
 
 

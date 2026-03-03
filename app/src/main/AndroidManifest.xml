@@ -17,7 +17,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ToolMedia3">
-
+        <activity
+            android:name=".ui.PlaybackSourceActivity"
+            android:exported="false" />
         <!-- 允许绘制到oppo、vivo刘海屏机型的刘海区域 -->
         <meta-data
             android:name="android.max_aspect"
@@ -42,7 +44,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.PlayerActivity"
             android:exported="false" />

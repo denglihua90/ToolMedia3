@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".ui.PlaybackSourceActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_source"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/dodgerblue"
+        android:paddingTop="0dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/tv_source_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_12"
+        android:background="@drawable/rv_item_bg"
+        android:hint="@string/text_hit_source_name"
+        android:minHeight="@dimen/dp_48"
+        android:padding="@dimen/dp_12"
+        android:text="guangsuapi"
+        android:textColor="@color/text_primary"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_source" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/tv_source_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_12"
+        android:autoSizeMaxTextSize="@dimen/dp_500"
+        android:autoSizeMinTextSize="@dimen/dp_50"
+        android:background="@drawable/rv_item_bg"
+        android:gravity="start"
+        android:hint="@string/text_hit_source_url"
+        android:letterSpacing="0.05"
+        android:lineSpacingExtra="1dp"
+        android:padding="@dimen/dp_12"
+        android:text="https://api.guangsuapi.com/api.php/provide/vod/from/gsm3u8/?ac=list&amp;t=13&amp;h=24&amp;pg=3"
+        android:textColor="@color/text_primary"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_source_name" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_submit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_12"
+        android:background="@color/dodgerblue"
+        android:padding="@dimen/dp_12"
+        android:text="@string/text_test"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_source_url" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btn_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_12"
+        android:background="@color/dodgerblue"
+        android:padding="@dimen/dp_12"
+        android:text="@string/text_save"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_submit" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_result"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="@dimen/dp_12"
+        android:textIsSelectable="true"
+        android:background="@drawable/rv_item_bg"
+        android:gravity="start"
+        android:hint="@string/text_hit_source_result"
+        android:letterSpacing="0.05"
+        android:lineSpacingExtra="1dp"
+        android:padding="@dimen/dp_12"
+        android:scrollbars="vertical"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/sp_15"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_save" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

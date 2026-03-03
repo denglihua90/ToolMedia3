@@ -1,6 +1,12 @@
 <resources>
     <string name="app_name">ToolMedia3</string>
-
+    <string name="text_submit">提交</string>
+    <string name="text_ok">确定</string>
+    <string name="text_save">保存</string>
+    <string name="text_test">测试</string>
+    <string name="text_hit_source_url">请输入播放源URL地址</string>
+    <string name="text_hit_source_name">请输入播放源名称</string>
+    <string name="text_hit_source_result">显示测试地址结果</string>
     <!-- 错误信息 -->
     <string name="error_network">网络错误，请检查网络连接</string>
     <string name="error_decode">视频解码错误</string>
@@ -57,4 +63,14 @@
     <string name="download_completed">下载完成</string>
     <string name="download_failed">下载失败</string>
     <string name="download_canceled">已取消</string>
+
+    <!-- 播放源测试 -->
+    <string name="loading">加载中...</string>
+    <string name="hint_source_url">请输入播放源地址</string>
+    <string name="hint_source_input">请输入播放源名称和地址</string>
+    <string name="source_saved">播放源已保存</string>
+    <string name="empty_response">响应数据为空</string>
+    <string name="request_failed" formatted="false">请求失败: %d %s</string>
+    <string name="network_error" formatted="false">网络错误: %s</string>
+    <string name="unknown_error" formatted="false">未知错误: %s</string>
 </resources>

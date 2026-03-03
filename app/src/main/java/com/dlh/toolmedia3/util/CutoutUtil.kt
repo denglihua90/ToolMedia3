@@ -1,9 +1,8 @@
-package com.dlh.toolmedia3.utils
+package com.dlh.toolmedia3.util
 
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.os.Build
 import android.view.View
 import android.view.WindowManager

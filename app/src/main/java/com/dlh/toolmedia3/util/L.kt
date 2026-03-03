@@ -1,4 +1,4 @@
-package com.dlh.toolmedia3.utils
+package com.dlh.toolmedia3.util
 
 import android.util.Log
 

@@ -165,7 +165,7 @@ class PlayerProcessor(
     
     private fun handlePlay(intent: PlayerIntent.Play, scope: CoroutineScope) {
         // 处理播放逻辑
-        _state.update { it.copy(isPlaying = true) }
+        _state.update { it.copy(isPlaying = true, errorMessage = null) }
         player?.play()
     }
     
@@ -397,5 +397,12 @@ class PlayerProcessor(
                 isPlaying = isPlaying
             )
         }
+    }
+    
+    /**
+     * 清除错误状态
+     */
+    fun clearErrorState() {
+        _state.update { it.copy(errorMessage = null) }
     }
 }

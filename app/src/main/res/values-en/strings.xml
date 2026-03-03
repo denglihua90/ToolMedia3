@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ToolMedia3</string>
-    
+    <string name="text_submit">Submit</string>
+    <string name="text_ok">Ok</string>
+    <string name="text_save">Save</string>
+    <string name="text_test">test</string>
+    <string name="text_hit_source_url">Please enter the URL address of the playback source.</string>
+    <string name="text_hit_source_name">Please enter the name of the playback source.</string>
+    <string name="text_hit_source_result">Display the result of the request</string>
     <!-- 错误信息 -->
     <string name="error_network">Network error, please check your network connection</string>
     <string name="error_decode">Video decoding error</string>

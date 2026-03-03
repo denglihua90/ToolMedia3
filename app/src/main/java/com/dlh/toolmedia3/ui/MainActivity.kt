@@ -10,36 +10,42 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.util.UnstableApi
 import com.dlh.toolmedia3.R
 import com.dlh.toolmedia3.databinding.ActivityMainBinding
-import com.dlh.toolmedia3.utils.StatusBarUtil
+import com.dlh.toolmedia3.databinding.ActivityPlaybackSourceBinding
+import com.dlh.toolmedia3.util.ConstantKey.KEY_AUTO_SAVE_PROGRESS
+import com.dlh.toolmedia3.util.ConstantKey.KEY_SETTINGS
+import com.dlh.toolmedia3.util.ConstantKey.KEY_SHOW_SELECTIONS_IN_LANDSCAPE
+import com.dlh.toolmedia3.util.StatusBarUtil
 import com.dlh.toolmedia3.video.BaseVideoView
+import com.gyf.immersionbar.ktx.immersionBar
 
 @UnstableApi
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var videoView: BaseVideoView
 
-    // SharedPreferences for saving settings
-    private val sharedPreferences by lazy {
-        getSharedPreferences("ToolMedia3Settings", MODE_PRIVATE)
+    private val binding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
     }
-
-    // Key for auto save progress setting
-    private val KEY_AUTO_SAVE_PROGRESS = "auto_save_progress"
+    private lateinit var videoView: BaseVideoView
 
     @SuppressLint("ResourceType")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+        // 实现沉浸式标题栏
+        immersionBar {
+            statusBarColor(R.color.black)
+            navigationBarColor(R.color.black)
+            statusBarDarkFont(false)
+            navigationBarDarkIcon(false)
+            fitsSystemWindows(true)
+            autoStatusBarDarkModeEnable(false)
+            autoNavigationBarDarkModeEnable(false)
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
             insets
         }
-        StatusBarUtil.immersiveStatusBar(this, window.statusBarColor)
-
-
         // 初始化视频播放器
         initVideoPlayer()
 
@@ -56,21 +62,17 @@ class MainActivity : AppCompatActivity() {
             }
 
             // 使用获取的URL播放视频
-            val videoTitle = getString(R.string.user_input_video)
+//            val videoTitle = getString(R.string.user_input_video)
+            val videoTitle = videoUrl
             videoView.setVideoSource(videoUrl, videoTitle)
             videoView.play()
         }
 
-        // 从SharedPreferences加载自动保存进度的状态
-        val isAutoSaveEnabled = sharedPreferences.getBoolean(KEY_AUTO_SAVE_PROGRESS, true)
-        binding.switchAutoSaveProgress.isChecked = isAutoSaveEnabled
-        videoView.setAutoSaveProgressEnabled(false)
-
-        // 为自动保存进度开关添加状态变化监听器
-        binding.switchAutoSaveProgress.setOnCheckedChangeListener { _, isChecked ->
-            videoView.setAutoSaveProgressEnabled(isChecked)
-            // 保存状态到SharedPreferences
-            sharedPreferences.edit().putBoolean(KEY_AUTO_SAVE_PROGRESS, false).apply()
+        // 为添加播放源按钮添加点击监听器
+        binding.btnSourceGet.setOnClickListener {
+            // 跳转到PlaybackSourceActivity
+            val intent = android.content.Intent(this, PlaybackSourceActivity::class.java)
+            startActivity(intent)
         }
 
         println("Kotlin version: ${KotlinVersion.CURRENT}")
@@ -84,8 +86,9 @@ class MainActivity : AppCompatActivity() {
         videoView.initPlayer(this)
         // 设置示例视频源（使用ExoPlayer官方示例视频）
         val videoUrl = "https://cdn.yzzy31-play.com/20260221/14914_d41b5422/index.m3u8"
-        val videoTitle = "霹雳神鹰"
-        videoView.setCutoutAdapted(false)
+        val videoTitle = "寻秦记"
+        videoView.setCutoutAdapted(true)
+        videoView.setShowSelectionsInLandscape(false)
         // 预加载视频
         videoView.preloadVideo(videoUrl, videoTitle)
 

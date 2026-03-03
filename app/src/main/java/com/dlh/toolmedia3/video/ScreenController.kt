@@ -5,11 +5,9 @@ import android.content.pm.ActivityInfo
 import android.view.OrientationEventListener
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
-import com.dlh.toolmedia3.utils.CutoutUtil.adaptCutoutAboveAndroidP
-import com.dlh.toolmedia3.utils.CutoutUtil.addCutoutPaddingToController
-import com.dlh.toolmedia3.utils.CutoutUtil.resetControllerPadding
-import com.dlh.toolmedia3.utils.PlayerUtils
+import com.dlh.toolmedia3.util.CutoutUtil
+import com.dlh.toolmedia3.util.CutoutUtil.adaptCutoutAboveAndroidP
+import com.dlh.toolmedia3.util.CutoutUtil.addCutoutPaddingToController
 
 
 /**
@@ -39,7 +37,7 @@ class ScreenController(private val activity: Activity) {
      */
     fun toggleFullScreen(playerContainer: View, isCutoutAdapted: Boolean = false) {
         if (isFullScreen) {
-            exitFullScreen()
+            exitFullScreen(isCutoutAdapted)
         } else {
             enterFullScreen(playerContainer, isCutoutAdapted)
         }
@@ -60,7 +58,9 @@ class ScreenController(private val activity: Activity) {
         val decorView = getDecorView() ?: return
 
         isFullScreen = true
-        adaptCutoutAboveAndroidP(activity, isCutoutAdapted)
+        if(isCutoutAdapted) {
+            adaptCutoutAboveAndroidP(activity, true)
+        }
 
         // 隐藏系统UI
         hideSysBar(decorView)
@@ -108,24 +108,27 @@ class ScreenController(private val activity: Activity) {
         // 直接重置controller_view的padding
         val controllerView = playerContainer.findViewById<ViewGroup>(com.dlh.toolmedia3.R.id.controller_view)
         if (controllerView != null) {
-            com.dlh.toolmedia3.utils.CutoutUtil.resetControllerPadding(controllerView)
+            CutoutUtil.resetControllerPadding(controllerView)
         }
     }
     
     /**
      * 退出全屏
      */
-    fun exitFullScreen() {
+    fun exitFullScreen(isCutoutAdapted: Boolean) {
         if (!isFullScreen) return
-        
+
         val decorView = getDecorView()
         val currentPlayerContainer = playerContainer
         val currentOriginalParent = originalParent
         if (decorView == null || currentPlayerContainer == null || currentOriginalParent == null) return
-        
+
         isFullScreen = false
 
-        adaptCutoutAboveAndroidP(activity,false)
+        if(isCutoutAdapted) {
+            adaptCutoutAboveAndroidP(activity, false)
+        }
+
         // 显示系统UI
         showSysBar(decorView)
         
@@ -220,12 +223,14 @@ class ScreenController(private val activity: Activity) {
             // 兼容 Android 11 以下版本
             var uiOptions = decorView.systemUiVisibility
             uiOptions = uiOptions or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            
+
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                 uiOptions = uiOptions or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             }
-            
+
             decorView.systemUiVisibility = uiOptions
+
+
         }
         
         // 已经通过 WindowInsetsController 处理了系统栏的隐藏，不再需要 FLAG_FULLSCREEN
@@ -238,9 +243,7 @@ class ScreenController(private val activity: Activity) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             // 使用 WindowInsetsController (Android 11+)
             val windowInsetsController = decorView.windowInsetsController
-            if (windowInsetsController != null) {
-                windowInsetsController.show(android.view.WindowInsets.Type.systemBars())
-            }
+            windowInsetsController?.show(android.view.WindowInsets.Type.systemBars())
         } else {
             // 兼容 Android 11 以下版本
             var uiOptions = decorView.systemUiVisibility
@@ -382,7 +385,7 @@ class ScreenController(private val activity: Activity) {
                 // 重置控制器padding
                 val controllerView = currentPlayerContainer.findViewById<ViewGroup>(com.dlh.toolmedia3.R.id.controller_view)
                 if (controllerView != null) {
-                    com.dlh.toolmedia3.utils.CutoutUtil.resetControllerPadding(controllerView)
+                    CutoutUtil.resetControllerPadding(controllerView)
                 }
                 // 重新适配刘海屏
                 findAndAdaptController(currentPlayerContainer)

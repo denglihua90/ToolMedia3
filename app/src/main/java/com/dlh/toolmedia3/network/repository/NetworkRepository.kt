@@ -1,6 +1,9 @@
 package com.dlh.toolmedia3.network.repository
 
 import android.content.Context
+import androidx.media3.common.util.Log
+import com.dlh.toolmedia3.network.NetworkService
+import com.dlh.toolmedia3.network.client.OkHttpClientManager
 import com.dlh.toolmedia3.network.model.VideoListResponse
 import com.dlh.toolmedia3.network.model.VideoDetailResponse
 import com.dlh.toolmedia3.network.service.ApiService
@@ -8,6 +11,7 @@ import com.dlh.toolmedia3.network.service.RetrofitService
 import com.dlh.toolmedia3.network.state.NetworkStateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.Request
 import retrofit2.Response
 
 /**
@@ -17,7 +21,7 @@ import retrofit2.Response
 class NetworkRepository(private val context: Context) {
 
     private val apiService: ApiService by lazy {
-        RetrofitService.create(ApiService::class.java)
+        NetworkService.getApiService()
     }
 
     private val networkStateManager: NetworkStateManager by lazy {
@@ -50,7 +54,9 @@ class NetworkRepository(private val context: Context) {
                     NetworkResult.Error("请求失败: ${response.code()} ${response.message()}")
                 }
             } catch (e: Exception) {
+                Log.e("NetworkRepository", "executeRequest: ${e.message}")
                 NetworkResult.Error("网络请求异常: ${e.message}")
+
             }
         }
     }
@@ -82,6 +88,18 @@ class NetworkRepository(private val context: Context) {
     suspend fun getVideoDetail(pg: Int = 1): NetworkResult<VideoDetailResponse> {
         return executeRequest {
             apiService.getVideoDetail(pg = pg)
+        }
+    }
+
+    /**
+     * 通用网络请求
+     * @param url 请求地址
+     * @return 网络请求结果
+     */
+    suspend fun genericRequest(url: String): NetworkResult<String> {
+        return executeRequest {
+
+            apiService.genericGetRequest(url)
         }
     }
 }

@@ -17,7 +17,7 @@ import androidx.media3.ui.PlayerView
 import com.dlh.toolmedia3.architecture.processor.PlayerProcessor
 import com.dlh.toolmedia3.architecture.viewmodel.PlayerViewModel
 import com.dlh.toolmedia3.databinding.LayoutBaseVideoViewBinding
-import com.dlh.toolmedia3.utils.PlayerUtils
+import com.dlh.toolmedia3.util.PlayerUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -248,9 +248,16 @@ open class BaseVideoView  @JvmOverloads constructor(
         this.videoUrl = url
         this.videoTitle = title
         
+        // 清除错误状态
+        if (::processor.isInitialized) {
+            // 清除错误信息
+            processor.clearErrorState()
+        }
+        
         val mediaItem = MediaItem.fromUri(url)
         player.setMediaItem(mediaItem)
         player.prepare()
+
         
         // 设置视频标题
         videoController.setVideoTitle(title)
@@ -272,7 +279,9 @@ open class BaseVideoView  @JvmOverloads constructor(
         CoroutineScope(Dispatchers.Main).launch {
             val progress = progressManager.loadProgress(videoUrl)
             if (progress != null) {
-                player.seekTo(progress)
+//                player.seekTo(progress)
+                seekTo(progress)
+
             }
         }
     }
@@ -457,6 +466,15 @@ open class BaseVideoView  @JvmOverloads constructor(
      */
     fun isAutoSaveProgressEnabled(): Boolean {
         return isAutoSaveProgressEnabled
+    }
+    
+    /**
+     * 设置是否在横屏模式下显示选集按钮
+     */
+    fun setShowSelectionsInLandscape(enabled: Boolean) {
+        if (::videoController.isInitialized) {
+            videoController.setShowSelectionsInLandscape(enabled)
+        }
     }
     
     // 生命周期回调

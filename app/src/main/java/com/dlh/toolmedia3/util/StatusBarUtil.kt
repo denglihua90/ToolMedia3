@@ -1,7 +1,6 @@
-package com.dlh.toolmedia3.utils
+package com.dlh.toolmedia3.util
 
 import android.app.Activity
-import android.content.Context
 import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.core.graphics.ColorUtils

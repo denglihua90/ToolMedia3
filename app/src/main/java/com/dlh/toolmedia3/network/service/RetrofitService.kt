@@ -6,6 +6,7 @@ import com.dlh.toolmedia3.network.model.VideoDetailResponse
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -33,6 +34,7 @@ class RetrofitService {
             return Retrofit.Builder()
                 .baseUrl(OkHttpClientManager.getBaseUrl())
                 .client(OkHttpClientManager.getInstance())
+                .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         }
@@ -78,4 +80,12 @@ interface ApiService {
         @Query("h") h: String = "24",
         @Query("pg") pg: Int = 1
     ): Response<VideoDetailResponse>
+
+    /**
+     * 通用GET请求
+     * @param url 请求地址
+     * @return 响应字符串
+     */
+    @GET
+    suspend fun genericGetRequest(@retrofit2.http.Url url: String): Response<String>
 }

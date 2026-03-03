@@ -30,12 +30,11 @@ class NetworkStateManager private constructor(private val context: Context) {
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private val _networkState = MutableLiveData<NetworkState>()
-    val networkState: LiveData<NetworkState> = _networkState
 
     init {
         initializeNetworkCallback()
-        // 初始化时检查当前网络状态
-        _networkState.value = getCurrentNetworkState()
+        // 初始化时检查当前网络状态，使用postValue确保在主线程上执行
+        _networkState.postValue(getCurrentNetworkState())
     }
 
     private fun initializeNetworkCallback() {
@@ -102,6 +101,10 @@ class NetworkStateManager private constructor(private val context: Context) {
      * @return 网络是否可用
      */
     fun isNetworkAvailable(): Boolean {
+        // 如果_networkState.value为null，直接检查当前网络状态
+        if (_networkState.value == null) {
+            return getCurrentNetworkState() is NetworkState.Connected
+        }
         return when (val state = _networkState.value) {
             is NetworkState.Connected -> true
             else -> false

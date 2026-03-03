@@ -70,14 +70,21 @@ class OkHttpClientManager {
     /**
      * 动态 BaseUrl 拦截器
      * 用于在请求时动态替换 baseUrl
+     * 当请求使用完整URL时，不进行baseUrl替换
      */
     private class BaseUrlInterceptor : Interceptor {
         override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
             val request = chain.request()
             val originalHttpUrl = request.url
             
-            // 解析新的 baseUrl
+            // 解析配置的 baseUrl
             val newBaseUrl = baseUrl.toHttpUrlOrNull() ?: originalHttpUrl
+            
+            // 检查原始URL的host是否与配置的baseUrl的host不同
+            // 如果不同，则认为是完整URL，不进行baseUrl替换
+            if (originalHttpUrl.host != newBaseUrl.host) {
+                return chain.proceed(request)
+            }
             
             // 构建新的 URL，保留原始路径和查询参数
             val newUrl = originalHttpUrl.newBuilder()
