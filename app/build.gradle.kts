@@ -81,24 +81,24 @@ dependencies {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-android-extensions-runtime")
     }
     implementation("androidx.recyclerview:recyclerview:1.3.2")
-    
+
     // BaseRecyclerViewAdapterHelper库
     implementation("com.github.CymChad:BaseRecyclerViewAdapterHelper:3.0.4")
     // 沉浸式状态栏和沉浸式导航栏管理: 对原库进行 Android 15、16 版本适配
     // https://github.com/OCNYang/ImmersionBar
     // 基础依赖包，必须要依赖
     implementation("com.github.OCNYang.ImmersionBar:immersionbar:3.4.6")
-   // kotlin扩展（可选）
+    // kotlin扩展（可选）
     implementation("com.github.OCNYang.ImmersionBar:immersionbar-ktx:3.4.6")
 
     // Room 依赖
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
-    
+
     // SQLCipher 依赖（用于数据库加密）
     implementation("net.zetetic:android-database-sqlcipher:4.5.4")
-    
+
     // 测试依赖
     testImplementation("androidx.room:room-testing:2.6.1")
 
@@ -108,7 +108,14 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-    implementation("com.google.code.gson:gson:2.10.1")
+    // Gson 解析容错：https://github.com/getActivity/GsonFactory
+    implementation("com.github.getActivity:GsonFactory:10.5")
+// Json 解析框架：https://github.com/google/gson
+    implementation("com.google.code.gson:gson:2.13.2") {
+        exclude(group = "com.google.errorprone", module = "error_prone_annotations")
+    }
+// Kotlin 反射库：用于反射 Kotlin data class 类对象，1.5.10 请修改成当前项目 Kotlin 的版本号
+    implementation(libs.kotlin.reflect)
 
     // 工具库
     debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")

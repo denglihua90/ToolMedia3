@@ -96,7 +96,7 @@ class NetworkRepository(private val context: Context) {
      * @param url 请求地址
      * @return 网络请求结果
      */
-    suspend fun genericRequest(url: String): NetworkResult<String> {
+    suspend fun genericRequest(url: String): NetworkResult<VideoListResponse> {
         return executeRequest {
 
             apiService.genericGetRequest(url)

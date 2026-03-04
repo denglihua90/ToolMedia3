@@ -3,6 +3,7 @@ package com.dlh.toolmedia3.network.service
 import com.dlh.toolmedia3.network.client.OkHttpClientManager
 import com.dlh.toolmedia3.network.model.VideoListResponse
 import com.dlh.toolmedia3.network.model.VideoDetailResponse
+import com.hjq.gson.factory.GsonFactory
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -35,7 +36,7 @@ class RetrofitService {
                 .baseUrl(OkHttpClientManager.getBaseUrl())
                 .client(OkHttpClientManager.getInstance())
                 .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(GsonFactory.getSingletonGson()))
                 .build()
         }
 
@@ -87,5 +88,8 @@ interface ApiService {
      * @return 响应字符串
      */
     @GET
-    suspend fun genericGetRequest(@retrofit2.http.Url url: String): Response<String>
+    suspend fun genericGetRequest(
+        @retrofit2.http.Url url: String,
+        @Query("ac") ac: String = "list",
+    ): Response<VideoListResponse>
 }

@@ -205,11 +205,11 @@ class SourceProcessor(private val context: Context) {
                     is com.dlh.toolmedia3.network.repository.NetworkResult.Success -> {
                         // 更新状态为测试成功
                         withContext(Dispatchers.Main) {
-                            _state.value = _state.value.copy(isTesting = false, testResult = result.data)
+                            _state.value = _state.value.copy(isTesting = false, testResult = result.data.categories.toString())
                         }
                         
                         // 发送测试成功事件
-                        _events.emit(SourceEvent.TestSuccess(result.data))
+                        _events.emit(SourceEvent.TestSuccess(result.data.toString()))
                     }
                     is com.dlh.toolmedia3.network.repository.NetworkResult.Error -> {
                         // 更新状态为测试失败
