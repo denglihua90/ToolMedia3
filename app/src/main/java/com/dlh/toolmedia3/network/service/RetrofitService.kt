@@ -1,8 +1,7 @@
 package com.dlh.toolmedia3.network.service
 
+import com.dlh.toolmedia3.data.model.VideoListResponse
 import com.dlh.toolmedia3.network.client.OkHttpClientManager
-import com.dlh.toolmedia3.network.model.VideoListResponse
-import com.dlh.toolmedia3.network.model.VideoDetailResponse
 import com.hjq.gson.factory.GsonFactory
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -80,7 +79,7 @@ interface ApiService {
         @Query("t") t: String = "66",
         @Query("h") h: String = "24",
         @Query("pg") pg: Int = 1
-    ): Response<VideoDetailResponse>
+    ): Response<VideoListResponse>
 
     /**
      * 通用GET请求

@@ -1,17 +1,13 @@
 package com.dlh.toolmedia3.network.repository
 
 import android.content.Context
-import androidx.media3.common.util.Log
+import android.util.Log
+import com.dlh.toolmedia3.data.model.VideoListResponse
 import com.dlh.toolmedia3.network.NetworkService
-import com.dlh.toolmedia3.network.client.OkHttpClientManager
-import com.dlh.toolmedia3.network.model.VideoListResponse
-import com.dlh.toolmedia3.network.model.VideoDetailResponse
 import com.dlh.toolmedia3.network.service.ApiService
-import com.dlh.toolmedia3.network.service.RetrofitService
 import com.dlh.toolmedia3.network.state.NetworkStateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.Request
 import retrofit2.Response
 
 /**
@@ -85,7 +81,7 @@ class NetworkRepository(private val context: Context) {
      * @param pg 页码
      * @return 视频详情网络请求结果
      */
-    suspend fun getVideoDetail(pg: Int = 1): NetworkResult<VideoDetailResponse> {
+    suspend fun getVideoDetail(pg: Int = 1): NetworkResult<VideoListResponse> {
         return executeRequest {
             apiService.getVideoDetail(pg = pg)
         }

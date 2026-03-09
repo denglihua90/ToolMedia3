@@ -62,7 +62,7 @@ class SourceProcessor(private val context: Context) {
                 
                 // 获取数据库实例
                 val database = DatabaseManager.getInstance(context).database
-                val sourceDao = database.sourceDao()
+                val sourceDao = database.playbackSourceDao()
                 
                 // 检查是否已存在同名播放源
                 val existingSource = sourceDao.getSourceByName(name)
@@ -71,7 +71,7 @@ class SourceProcessor(private val context: Context) {
                     // 更新现有播放源
                     val updatedSource = existingSource.copy(
                         url = url,
-                        updatedAt = Date()
+                        updatedAt = System.currentTimeMillis()
                     )
                     sourceDao.updateSource(updatedSource)
                 } else {
@@ -115,7 +115,7 @@ class SourceProcessor(private val context: Context) {
                 
                 // 获取数据库实例
                 val database = DatabaseManager.getInstance(context).database
-                val sourceDao = database.sourceDao()
+                val sourceDao = database.playbackSourceDao()
                 
                 // 加载所有播放源
                 val sources = sourceDao.getAllSources().collect {
@@ -154,10 +154,10 @@ class SourceProcessor(private val context: Context) {
                 
                 // 获取数据库实例
                 val database = DatabaseManager.getInstance(context).database
-                val sourceDao = database.sourceDao()
+                val sourceDao = database.playbackSourceDao()
                 
                 // 删除播放源
-                sourceDao.deleteSource(id)
+                sourceDao.deleteSourceById(id)
                 
                 // 更新状态为删除成功
                 withContext(Dispatchers.Main) {

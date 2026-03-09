@@ -1,33 +1,16 @@
-package com.dlh.toolmedia3.network.model
+package com.dlh.toolmedia3.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
-
-/**
- * 视频列表响应数据模型
- */
-data class VideoListResponse(
-    @SerializedName("code") val code: Int,
-    @SerializedName("msg") val msg: String,
-    @SerializedName("page") val page: Int,
-    @SerializedName("pagecount") val pagecount: Int,
-    @SerializedName("limit") val limit: Int,
-    @SerializedName("total") val total: Int,
-    @SerializedName("list") val list: List<VideoItem>,
-    @SerializedName("class") val categories: List<CategoryItem>
-)
-
-/**
- * 分类项数据模型
- */
-data class CategoryItem(
-    @SerializedName("type_id") val typeId: String,
-    @SerializedName("type_name") val typeName: String
-)
 
 /**
  * 视频项数据模型（合并了 VideoItem 和 VideoDetailItem）
  */
+@Entity(tableName = "videos")
 data class VideoItem(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
     @SerializedName("vod_time") val vodTime: String,
     @SerializedName("vod_id") val vodId: String,
     @SerializedName("vod_name") val vodName: String,

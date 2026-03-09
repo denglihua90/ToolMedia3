@@ -35,7 +35,7 @@ class PlaybackSourceActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(binding.root)
         //设置导航图标要在setSupportActionBar方法之后
-        setSupportActionBar(binding.toolbarSource);
+        setSupportActionBar(binding.toolbarSource)
         binding.toolbarSource.setNavigationIcon(R.drawable.baseline_back_arrow_24)
         binding.toolbarSource.setNavigationOnClickListener {
             finish()
@@ -90,8 +90,8 @@ class PlaybackSourceActivity : AppCompatActivity() {
                     binding.textResult.text = getString(R.string.loading)
                 }
                 
-                // 处理测试状态
-                if (it.isTesting) {
+                // 处理测试
+                 if (it.isTesting) {  //状态
                     binding.textResult.text = getString(R.string.loading)
                 }
                 
