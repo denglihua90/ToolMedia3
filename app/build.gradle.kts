@@ -24,7 +24,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("boolean", "DEBUG_MODE", "false")
         }
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("boolean", "DEBUG_MODE", "true")
+        }
+
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -33,6 +43,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

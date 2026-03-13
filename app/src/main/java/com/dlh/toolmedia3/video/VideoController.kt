@@ -9,7 +9,6 @@ import android.graphics.Rect
 import android.os.BatteryManager
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -19,6 +18,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.dlh.toolmedia3.R
 import com.dlh.toolmedia3.architecture.viewmodel.PlayerViewModel
 import com.dlh.toolmedia3.databinding.LayoutVideoControllerBinding
+import com.dlh.toolmedia3.util.DLHLog
 import com.dlh.toolmedia3.util.PlayerUtils
 import com.lxj.xpopup.XPopup
 import com.lxj.xpopup.enums.PopupPosition
@@ -673,7 +673,7 @@ class VideoController(
             // 更新播放器的播放速度
             viewModel.setPlaybackSpeed(selectedSpeed)
         }
-        Log.e("offsetY","---->:$mOffsetY")
+        DLHLog.e { "offsetY: ---->:$mOffsetY" }
         XPopup.Builder(context)
             .popupPosition(PopupPosition.Right) // 弹窗位置在右边
             .popupWidth(binding.root.width / 2)
@@ -697,7 +697,7 @@ class VideoController(
         selectEpisodeView.onEpisodeSelectedCallback = { selectedEpisode ->
             // 处理选集选择逻辑
             // 这里可以根据选中的集数更新播放器状态
-            Log.d("VideoController", "Selected episode: $selectedEpisode")
+            DLHLog.d { "Selected episode: $selectedEpisode" }
         }
         XPopup.Builder(context)
             .popupPosition(PopupPosition.Right) // 弹窗位置在右边

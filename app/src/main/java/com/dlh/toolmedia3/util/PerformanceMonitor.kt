@@ -3,9 +3,7 @@ package com.dlh.toolmedia3.util
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.media3.common.Player
-import com.dlh.toolmedia3.architecture.processor.PlayerProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,7 +13,6 @@ import java.util.concurrent.atomic.AtomicLong
 class PerformanceMonitor(private val player: Player) {
     
     companion object {
-        private const val TAG = "PerformanceMonitor"
         private const val MONITOR_INTERVAL = 1000L // 1秒
         private const val FRAME_RATE_SAMPLE_SIZE = 30 // 采样帧数
     }
@@ -73,7 +70,7 @@ class PerformanceMonitor(private val player: Player) {
                 val bufferHealth = calculateBufferHealth()
                 val cpuUsage = calculateCpuUsage()
                 
-                Log.d(TAG, "Performance metrics - FPS: ${String.format("%.2f", fps)}, Buffer: ${String.format("%.2f", bufferHealth)}s, CPU: ${String.format("%.2f", cpuUsage)}%")
+                DLHLog.d { "Performance metrics - FPS: ${String.format("%.2f", fps)}, Buffer: ${String.format("%.2f", bufferHealth)}s, CPU: ${String.format("%.2f", cpuUsage)}%" }
             }
             
             handler.postDelayed(monitoringRunnable, MONITOR_INTERVAL)
@@ -86,7 +83,7 @@ class PerformanceMonitor(private val player: Player) {
         
         handler.postDelayed(monitoringRunnable, MONITOR_INTERVAL)
         
-        Log.d(TAG, "Performance monitoring started")
+        DLHLog.d { "Performance monitoring started" }
     }
     
     /**
@@ -96,7 +93,7 @@ class PerformanceMonitor(private val player: Player) {
         isMonitoring = false
         handler.removeCallbacks(monitoringRunnable)
         
-        Log.d(TAG, "Performance monitoring stopped")
+        DLHLog.d { "Performance monitoring stopped" }
     }
     
     /**
@@ -175,7 +172,7 @@ class PerformanceMonitor(private val player: Player) {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error calculating CPU usage", e)
+            DLHLog.e("Error calculating CPU usage", e)
         }
         
         return 0.0

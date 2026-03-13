@@ -4,6 +4,9 @@ import android.app.Application
 import com.dlh.toolmedia3.network.NetworkService
 import com.dlh.toolmedia3.network.client.DiskLruCacheManager
 import com.dlh.toolmedia3.network.client.OkHttpClientManager
+import com.dlh.toolmedia3.util.DLHLog
+
+import com.dlh.toolmedia3.BuildConfig
 
 class ToolMediaApplication : Application() {
 
@@ -18,7 +21,10 @@ class ToolMediaApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-
+      // 启用文件日志
+        DLHLog.enableFileLog(true)
+        // 设置日志级别
+        DLHLog.setGlobalLogLevel(if (BuildConfig.DEBUG) DLHLog.LogLevel.DEBUG else DLHLog.LogLevel.INFO)
         // 初始化网络相关组件
         initializeNetworkComponents()
     }

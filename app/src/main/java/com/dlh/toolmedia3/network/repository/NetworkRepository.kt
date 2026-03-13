@@ -1,11 +1,11 @@
 package com.dlh.toolmedia3.network.repository
 
 import android.content.Context
-import android.util.Log
 import com.dlh.toolmedia3.data.model.VideoListResponse
 import com.dlh.toolmedia3.network.NetworkService
 import com.dlh.toolmedia3.network.service.ApiService
 import com.dlh.toolmedia3.network.state.NetworkStateManager
+import com.dlh.toolmedia3.util.DLHLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -50,7 +50,7 @@ class NetworkRepository(private val context: Context) {
                     NetworkResult.Error("请求失败: ${response.code()} ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("NetworkRepository", "executeRequest: ${e.message}")
+                DLHLog.e { "executeRequest: ${e.message}" }
                 NetworkResult.Error("网络请求异常: ${e.message}")
 
             }
