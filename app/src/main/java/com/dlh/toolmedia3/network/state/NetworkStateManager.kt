@@ -30,6 +30,12 @@ class NetworkStateManager private constructor(private val context: Context) {
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private val _networkState = MutableLiveData<NetworkState>()
+    
+    /**
+     * 网络状态 LiveData，供外部观察
+     */
+    val networkState: LiveData<NetworkState>
+        get() = _networkState
 
     init {
         initializeNetworkCallback()

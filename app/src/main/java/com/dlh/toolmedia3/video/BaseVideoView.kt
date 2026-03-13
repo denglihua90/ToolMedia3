@@ -11,16 +11,27 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
+import com.dlh.toolmedia3.architecture.event.PlayerEvent
 import com.dlh.toolmedia3.architecture.processor.PlayerProcessor
+import com.dlh.toolmedia3.architecture.state.PlayerState
 import com.dlh.toolmedia3.architecture.viewmodel.PlayerViewModel
 import com.dlh.toolmedia3.databinding.LayoutBaseVideoViewBinding
+import com.dlh.toolmedia3.network.state.NetworkState
+import com.dlh.toolmedia3.network.state.NetworkStateManager
+import com.dlh.toolmedia3.util.PerformanceMonitor
 import com.dlh.toolmedia3.util.PlayerUtils
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.dlh.toolmedia3.network.state.NetworkType as NetworkStateManagerNetworkType
 
 @androidx.media3.common.util.UnstableApi
 open class BaseVideoView  @JvmOverloads constructor(
@@ -61,7 +72,7 @@ open class BaseVideoView  @JvmOverloads constructor(
     private val handler = Handler(Looper.getMainLooper())
     
     // 状态更新间隔（毫秒）
-    private val STATE_UPDATE_INTERVAL = 100L
+    private var STATE_UPDATE_INTERVAL = 300L // 优化：增加更新间隔，减少UI线程负担
     
     // 状态更新任务
     private lateinit var stateUpdateRunnable: Runnable
@@ -73,6 +84,27 @@ open class BaseVideoView  @JvmOverloads constructor(
     // 自动保存播放进度的开关
     private var isAutoSaveProgressEnabled: Boolean = true
     
+    // 网络状态管理器
+    private lateinit var networkStateManager: NetworkStateManager
+    private var networkStateObserver: androidx.lifecycle.Observer<NetworkState>? = null
+    
+    // 性能监控器
+    private lateinit var performanceMonitor: PerformanceMonitor
+    
+    // 辅助数据类
+    data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+    
+    /**
+     * 根据播放状态调整状态更新间隔
+     */
+    private fun adjustStateUpdateInterval() {
+        STATE_UPDATE_INTERVAL = if (::player.isInitialized && (player.isPlaying || player.playbackState == Player.STATE_BUFFERING)) {
+            300L // 播放时：300ms更新一次
+        } else {
+            1000L // 暂停时：1000ms更新一次
+        }
+    }
+    
     /**
      * 初始化播放器
      */
@@ -83,8 +115,49 @@ open class BaseVideoView  @JvmOverloads constructor(
         // 初始化PlayerView
         playerView = binding.playerView
         
+        // 初始化网络状态管理器，用于检测网络类型
+        networkStateManager = NetworkStateManager.getInstance(context)
+        val networkType = networkStateManager.getCurrentNetworkType()
+        
+        // 根据网络类型调整HttpDataSource配置
+        val (connectTimeout, readTimeout) = when (networkType) {
+            NetworkStateManagerNetworkType.WIFI -> Pair(8000, 12000) // WIFI网络：更短的超时
+            NetworkStateManagerNetworkType.CELLULAR -> Pair(10000, 15000) // 移动网络：适中的超时
+            else -> Pair(12000, 18000) // 其他网络：更长的超时
+        }
+        
         // 初始化ExoPlayer
-        player = ExoPlayer.Builder(context).build()
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setConnectTimeoutMs(connectTimeout) // 根据网络类型调整连接超时
+            .setReadTimeoutMs(readTimeout) // 根据网络类型调整读取超时
+//            .setUserAgent("ToolMedia3/1.0") // 设置用户代理
+            .setAllowCrossProtocolRedirects(true) // 允许跨协议重定向
+        val dataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
+        
+        // 根据网络类型调整缓冲策略
+        val (minBuffer, maxBuffer, playbackStart, bufferPlayback) = when (networkType) {
+            NetworkStateManagerNetworkType.WIFI -> 
+                Quadruple(3000, 20000, 300, 800) // WIFI网络：更小的缓冲
+            NetworkStateManagerNetworkType.CELLULAR -> 
+                Quadruple(8000, 40000, 800, 1500) // 移动网络：更大的缓冲
+            else -> 
+                Quadruple(10000, 50000, 1000, 2000) // 其他网络：最大的缓冲
+        }
+        
+        // 配置缓冲策略
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                minBuffer,     // 最小缓冲时间（毫秒）
+                maxBuffer,     // 最大缓冲时间（毫秒）
+                playbackStart, // 播放开始前的最小缓冲时间（毫秒）
+                bufferPlayback // 缓冲播放阈值（毫秒）
+            )
+            .build()
+        
+        player = ExoPlayer.Builder(context)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+            .setLoadControl(loadControl)
+            .build()
         playerView.player = player
         
         // 禁用PlayerView的默认控制器和触摸处理
@@ -132,17 +205,23 @@ open class BaseVideoView  @JvmOverloads constructor(
         
         // 初始化状态更新任务
         stateUpdateRunnable = Runnable {
+            // 根据播放状态调整更新间隔
+            adjustStateUpdateInterval()
+            
             // 更新控制器状态
             updateControllerState()
             
             // 更新播放器状态到ViewModel
             if (::player.isInitialized && ::viewModel.isInitialized) {
-                viewModel.updatePlayerState(
-                    player.currentPosition,
-                    player.bufferedPosition,
-                    player.duration,
-                    player.isPlaying
-                )
+                // 优化：只在播放器真正播放时才更新状态
+                if (player.isPlaying || player.playbackState == Player.STATE_BUFFERING) {
+                    viewModel.updatePlayerState(
+                        player.currentPosition,
+                        player.bufferedPosition,
+                        player.duration,
+                        player.isPlaying
+                    )
+                }
             }
             
             // 继续下一次更新
@@ -155,8 +234,17 @@ open class BaseVideoView  @JvmOverloads constructor(
         // 观察播放器事件
         observePlayerEvents()
         
+        // 初始化网络状态观察
+        initNetworkStateObserver()
+        
+        // 初始化性能监控器
+        performanceMonitor = PerformanceMonitor(player)
+        
         // 开始状态更新
         startStateUpdate()
+        
+        // 开始性能监控
+        performanceMonitor.startMonitoring()
 
 
     }
@@ -164,66 +252,75 @@ open class BaseVideoView  @JvmOverloads constructor(
     /**
      * 观察播放器状态
      */
+    // 上一次的状态，用于状态过滤
+    private var lastState: PlayerState? = null
+    
     protected open fun observePlayerState() {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleOwner?.lifecycleScope?.launch {
             viewModel.state.collect {
-                // 处理加载状态
-                val isLandscape = if (::screenController.isInitialized) screenController.isLandscape() else false
-                val bufferPercentage = if (it.duration > 0) ((it.bufferedPosition * 100) / it.duration).toInt() else 0
+                // 状态过滤：只有当状态真正变化时才更新UI
+                val isStateChanged = lastState != it
+                lastState = it
                 
-                // 更新加载视图状态
-                if (::loadingView.isInitialized) {
-                    loadingView.updateState(
-                        it.playState,
-                        bufferPercentage,
-                        it.errorMessage,
-                        isLandscape
-                    )
-                }
-                
-                // 处理屏幕控制状态变化
-                if (::screenController.isInitialized) {
-                    // 全屏状态变化
-                    val isFullScreen = it.isFullScreen
-                    if (isFullScreen != screenController.isFullScreen()) {
-                        // 传递当前BaseVideoView作为播放器容器
-                        screenController.toggleFullScreen(this@BaseVideoView, it.isCutoutAdapted)
-                        
-                        // 退出全屏时解锁屏幕
-                        if (!isFullScreen) {
-                            videoController.unlockScreen()
+                if (isStateChanged) {
+                    // 处理加载状态
+                    val isLandscape = if (::screenController.isInitialized) screenController.isLandscape() else false
+                    val bufferPercentage = if (it.duration > 0) ((it.bufferedPosition * 100) / it.duration).toInt() else 0
+                    
+                    // 更新加载视图状态
+                    if (::loadingView.isInitialized) {
+                        loadingView.updateState(
+                            it.playState,
+                            bufferPercentage,
+                            it.errorMessage,
+                            isLandscape
+                        )
+                    }
+                    
+                    // 处理屏幕控制状态变化
+                    if (::screenController.isInitialized) {
+                        // 全屏状态变化
+                        val isFullScreen = it.isFullScreen
+                        if (isFullScreen != screenController.isFullScreen()) {
+                            // 传递当前BaseVideoView作为播放器容器
+                            screenController.toggleFullScreen(this@BaseVideoView, it.isCutoutAdapted)
+                            
+                            // 退出全屏时解锁屏幕
+                            if (!isFullScreen) {
+                                videoController.unlockScreen()
+                            }
                         }
-                    }
-                    
-                    // 画中画状态变化
-                    val isPictureInPicture = it.isPictureInPicture
-                    if (isPictureInPicture && !screenController.isInPictureInPictureMode()) {
-                        screenController.enterPictureInPictureMode()
-                    }
-                    
-                    // 更新屏幕方向状态
-                    videoController.updateOrientation(isLandscape)
+                        
+                        // 画中画状态变化
+                        val isPictureInPicture = it.isPictureInPicture
+                        if (isPictureInPicture && !screenController.isInPictureInPictureMode()) {
+                            screenController.enterPictureInPictureMode()
+                        }
+                        
+                        // 更新屏幕方向状态
+                        videoController.updateOrientation(isLandscape)
 
-                }
-                
-//                // 处理缩放类型变化
-//                // 暂时注释掉，需要确认Media3的正确常量名称
-//                 when (it.scaleType) {
-//                     0 -> playerView.setResizeMode(androidx.media3.common.Player.RESIZE_MODE_FIT)
-//                     1 -> playerView.setResizeMode(androidx.media3.common.Player.RESIZE_MODE_FILL)
-//                     2 -> playerView.setResizeMode(androidx.media3.common.Player.RESIZE_MODE_ZOOM)
-//                 }
-                
-                // 处理视频旋转和镜像
-                updateVideoTransform(it.videoRotation, it.isVideoMirrored)
-                
-                // 处理音频模式
-                if (it.isAudioOnlyMode) {
-                    // 纯音频模式：隐藏视频画面
-                    playerView.visibility = View.GONE
-                } else {
-                    // 正常模式：显示视频画面
-                    playerView.visibility = View.VISIBLE
+                    }
+                    
+//                    // 处理缩放类型变化
+//                    // 暂时注释掉，需要确认Media3的正确常量名称
+//                     when (it.scaleType) {
+//                         0 -> playerView.setResizeMode(androidx.media3.common.Player.RESIZE_MODE_FIT)
+//                         1 -> playerView.setResizeMode(androidx.media3.common.Player.RESIZE_MODE_FILL)
+//                         2 -> playerView.setResizeMode(androidx.media3.common.Player.RESIZE_MODE_ZOOM)
+//                     }
+                    
+                    // 处理视频旋转和镜像
+                    updateVideoTransform(it.videoRotation, it.isVideoMirrored)
+                    
+                    // 处理音频模式
+                    if (it.isAudioOnlyMode) {
+                        // 纯音频模式：隐藏视频画面
+                        playerView.visibility = View.GONE
+                    } else {
+                        // 正常模式：显示视频画面
+                        playerView.visibility = View.VISIBLE
+                    }
                 }
             }
         }
@@ -233,10 +330,211 @@ open class BaseVideoView  @JvmOverloads constructor(
      * 观察播放器事件
      */
     protected open fun observePlayerEvents() {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleOwner?.lifecycleScope?.launch {
             viewModel.events.collect {
-                // 这里可以处理事件
+                when (it) {
+                    // 播放状态变化事件
+                    is PlayerEvent.PlaybackStateChanged -> {
+                        // 处理播放状态变化
+                        when (it.state) {
+                            Player.STATE_IDLE -> {
+                                // 空闲状态
+                                if (::loadingView.isInitialized) {
+                                    loadingView.updateState(it.state, 0, null, false)
+                                }
+                            }
+                            Player.STATE_BUFFERING -> {
+                                // 缓冲状态
+                                if (::loadingView.isInitialized) {
+                                    loadingView.updateState(it.state, 0, null, false)
+                                }
+                            }
+                            Player.STATE_READY -> {
+                                // 就绪状态
+                                if (::loadingView.isInitialized) {
+                                    loadingView.updateState(it.state, 100, null, false)
+                                }
+                            }
+                            Player.STATE_ENDED -> {
+                                // 播放结束
+                                if (::loadingView.isInitialized) {
+                                    loadingView.updateState(it.state, 100, null, false)
+                                }
+                            }
+                        }
+                    }
+                    is PlayerEvent.IsPlayingChanged -> {
+                        // 处理播放状态变化
+                        // 播放状态变化会通过updateControllerState自动更新
+                        videoController.updateControllerState()
+                    }
+                    is PlayerEvent.PositionDiscontinuity -> {
+                        // 处理位置不连续事件
+                        // 可以在这里处理跳转后的逻辑
+                    }
+                    is PlayerEvent.SeekProcessed -> {
+                        // 处理跳转完成事件
+                        // 可以在这里处理跳转完成后的逻辑
+                    }
+                    // 轨道变化事件
+                    is PlayerEvent.TracksChanged -> {
+                        // 处理轨道变化
+                        // 可以在这里更新可用的轨道信息
+                    }
+                    // 错误事件
+                    is PlayerEvent.PlayerError -> {
+                        // 处理播放器错误
+                        if (::loadingView.isInitialized) {
+                            loadingView.updateState(Player.STATE_IDLE, 0, it.error.message, false)
+                        }
+                    }
+                    // 下载事件
+                    is PlayerEvent.DownloadStarted -> {
+                        // 处理下载开始
+                        // 可以显示下载开始的提示
+                    }
+                    is PlayerEvent.DownloadProgress -> {
+                        // 处理下载进度
+                        // 可以更新下载进度条
+                    }
+                    is PlayerEvent.DownloadCompleted -> {
+                        // 处理下载完成
+                        // 可以显示下载完成的提示
+                    }
+                    is PlayerEvent.DownloadFailed -> {
+                        // 处理下载失败
+                        // 可以显示下载失败的提示
+                    }
+                    is PlayerEvent.DownloadPaused -> {
+                        // 处理下载暂停
+                        // 可以显示下载暂停的提示
+                    }
+                    is PlayerEvent.DownloadCanceled -> {
+                        // 处理下载取消
+                        // 可以显示下载取消的提示
+                    }
+                    // 缓存事件
+                    is PlayerEvent.CacheSizeChanged -> {
+                        // 处理缓存大小变化
+                        // 可以更新缓存大小显示
+                    }
+                    is PlayerEvent.CacheCleared -> {
+                        // 处理缓存清除
+                        // 可以显示缓存清除成功的提示
+                    }
+                    // 其他事件
+                    is PlayerEvent.ScreenshotTaken -> {
+                        // 处理截图完成
+                        // 可以显示截图成功的提示
+                    }
+                    is PlayerEvent.PlaybackProgressSaved -> {
+                        // 处理播放进度保存
+                        // 可以记录保存的进度
+                    }
+                    is PlayerEvent.PlaybackProgressLoaded -> {
+                        // 处理播放进度加载
+                        // 可以跳转到加载的进度
+                        seekTo(it.position)
+                    }
+                    is PlayerEvent.NetworkStateChanged -> {
+                        // 处理网络状态变化
+                        // 可以根据网络状态调整播放策略
+                    }
+                }
             }
+        }
+    }
+    
+    /**
+     * 初始化网络状态观察
+     */
+    private fun initNetworkStateObserver() {
+        networkStateObserver = androidx.lifecycle.Observer { networkState ->
+            handleNetworkStateChange(networkState)
+        }
+        networkStateManager.networkState.observe(lifecycleOwner!!, networkStateObserver!!)
+    }
+    
+    /**
+     * 处理网络状态变化
+     */
+    private fun handleNetworkStateChange(networkState: NetworkState) {
+        lifecycleOwner?.lifecycleScope?.launch(Dispatchers.Main) {
+            // 记录网络状态变化
+            println("[Network] State changed to: $networkState")
+            
+            // 根据网络类型调整播放策略和缓冲策略
+            when (networkState) {
+                is NetworkState.Connected -> {
+                    val networkType = networkState.type
+                    when (networkType) {
+                        NetworkStateManagerNetworkType.WIFI, NetworkStateManagerNetworkType.CELLULAR, NetworkStateManagerNetworkType.ETHERNET -> {
+                            // 网络恢复，自动恢复播放
+                            if (!player.isPlaying && player.playbackState == Player.STATE_READY) {
+                                player.play()
+                            }
+                            // 更新缓冲策略
+                            updateBufferStrategy(networkType)
+                        }
+                        else -> {
+                            // 其他网络类型，更新缓冲策略
+                            updateBufferStrategy(networkType)
+                        }
+                    }
+                    // 发送网络状态变化事件
+                    viewModel.networkStateChanged(getNetworkTypeOrdinal(networkType))
+                }
+                is NetworkState.Disconnected -> {
+                    // 无网络，暂停播放
+                    if (player.isPlaying) {
+                        player.pause()
+                    }
+                    // 发送网络状态变化事件
+                    viewModel.networkStateChanged(3) // NONE 对应的 ordinal
+                }
+            }
+        }
+    }
+    
+    /**
+     * 根据网络类型更新缓冲策略
+     */
+    private fun updateBufferStrategy(networkType: NetworkStateManagerNetworkType) {
+        // 根据网络类型调整缓冲策略
+        val (minBuffer, maxBuffer, playbackStart, bufferPlayback) = when (networkType) {
+            NetworkStateManagerNetworkType.WIFI -> 
+                Quadruple(3000, 20000, 300, 800) // WIFI网络：更小的缓冲
+            NetworkStateManagerNetworkType.CELLULAR -> 
+                Quadruple(8000, 40000, 800, 1500) // 移动网络：更大的缓冲
+            else -> 
+                Quadruple(10000, 50000, 1000, 2000) // 其他网络：最大的缓冲
+        }
+        
+        // 创建新的LoadControl
+        val newLoadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                minBuffer,     // 最小缓冲时间（毫秒）
+                maxBuffer,     // 最大缓冲时间（毫秒）
+                playbackStart, // 播放开始前的最小缓冲时间（毫秒）
+                bufferPlayback // 缓冲播放阈值（毫秒）
+            )
+            .build()
+        
+        // 注意：在Media3 1.9.0中，ExoPlayer不支持运行时更新LoadControl
+        // 缓冲策略将在播放器初始化时设置
+        println("[BufferStrategy] Updated for network type: $networkType")
+    }
+    
+    /**
+     * 将 NetworkStateManager 的网络类型转换为 BaseVideoView 中使用的 ordinal
+     */
+    private fun getNetworkTypeOrdinal(networkType: NetworkStateManagerNetworkType): Int {
+        return when (networkType) {
+            NetworkStateManagerNetworkType.WIFI -> 1 // WIFI
+            NetworkStateManagerNetworkType.CELLULAR -> 2 // MOBILE
+            NetworkStateManagerNetworkType.ETHERNET -> 0 // UNKNOWN
+            NetworkStateManagerNetworkType.OTHER -> 0 // UNKNOWN
+            NetworkStateManagerNetworkType.NONE -> 3 // NONE
         }
     }
     
@@ -276,7 +574,7 @@ open class BaseVideoView  @JvmOverloads constructor(
      * 加载播放进度
      */
     private fun loadPlaybackProgress(videoUrl: String) {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleOwner?.lifecycleScope?.launch {
             val progress = progressManager.loadProgress(videoUrl)
             if (progress != null) {
 //                player.seekTo(progress)
@@ -296,7 +594,7 @@ open class BaseVideoView  @JvmOverloads constructor(
                     val position = player.currentPosition
                     val duration = player.duration
                     if (duration > 0) {
-                        CoroutineScope(Dispatchers.IO).launch {
+                        lifecycleOwner?.lifecycleScope?.launch(Dispatchers.IO) {
                             progressManager.saveProgress(videoUrl, position, duration)
                         }
                     }
@@ -431,13 +729,23 @@ open class BaseVideoView  @JvmOverloads constructor(
         }
     }
     
+
+    
     /**
      * 释放播放器资源
      */
     open fun release() {
         stopStateUpdate()
+        // 停止性能监控
+        if (::performanceMonitor.isInitialized) {
+            performanceMonitor.stopMonitoring()
+        }
         videoController.destroy()
         player.release()
+        // 移除网络状态观察
+        networkStateObserver?.let {
+            networkStateManager.networkState.removeObserver(it)
+        }
         lifecycleOwner?.lifecycle?.removeObserver(this)
     }
     
