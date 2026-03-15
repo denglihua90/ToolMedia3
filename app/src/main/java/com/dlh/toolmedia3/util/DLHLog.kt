@@ -301,9 +301,16 @@ object DLHLog {
      */
     private fun initLogFile() {
         try {
-            val logDir = File(Environment.getExternalStorageDirectory(), LOG_DIR)
+            // 尝试使用应用缓存目录
+            val logDir = File(System.getProperty("java.io.tmpdir"), "ToolMedia3/logs")
+            
+            // 确保目录存在
             if (!logDir.exists()) {
-                logDir.mkdirs()
+                val created = logDir.mkdirs()
+                if (!created) {
+                    Log.e(DEFAULT_TAG, "Failed to create log directory")
+                    return
+                }
             }
             
             // 清理旧日志文件
@@ -312,13 +319,26 @@ object DLHLog {
             // 创建新日志文件
             val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
             val fileName = "log_${dateFormat.format(Date())}.txt"
-            logFile = File(logDir, fileName)
-            fileWriter = FileWriter(logFile, true)
+            val newLogFile = File(logDir, fileName)
+            
+            // 确保文件存在
+            if (!newLogFile.exists()) {
+                val created = newLogFile.createNewFile()
+                if (!created) {
+                    Log.e(DEFAULT_TAG, "Failed to create log file")
+                    return
+                }
+            }
+            
+            logFile = newLogFile
+            fileWriter = FileWriter(newLogFile, true)
             
             // 写入日志头部
             val header = "\n=== ToolMedia3 Log Start ===\n"
             fileWriter?.write(header)
             fileWriter?.flush()
+            
+            Log.i(DEFAULT_TAG, "Log file initialized: ${logFile?.absolutePath}")
         } catch (e: Exception) {
             Log.e(DEFAULT_TAG, "Failed to initialize log file", e)
         }

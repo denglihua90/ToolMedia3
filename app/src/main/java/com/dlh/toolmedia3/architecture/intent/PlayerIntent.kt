@@ -54,6 +54,7 @@ sealed class PlayerIntent {
     object ClearCache : PlayerIntent()
     object GetCacheSize : PlayerIntent()
     data class SetMaxCacheSize(val size: Long) : PlayerIntent()
+    data class SetCacheEnabled(val enabled: Boolean) : PlayerIntent()
     
     // 其他功能
     object TakeScreenshot : PlayerIntent()

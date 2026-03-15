@@ -48,6 +48,8 @@ data class PlayerState(
     val networkType: Int = NETWORK_UNKNOWN,
     // 是否开启刘海屏适配
     val isCutoutAdapted: Boolean = true, // 默认开启刘海屏适配
+    // 是否开启缓存
+    val isCacheEnabled: Boolean = true, // 默认开启缓存
     // 错误信息
     val errorMessage: String? = null
 ) {

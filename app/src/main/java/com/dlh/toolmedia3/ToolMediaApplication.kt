@@ -5,13 +5,15 @@ import com.dlh.toolmedia3.network.NetworkService
 import com.dlh.toolmedia3.network.client.DiskLruCacheManager
 import com.dlh.toolmedia3.network.client.OkHttpClientManager
 import com.dlh.toolmedia3.util.DLHLog
+import com.dlh.toolmedia3.video.PlayerPool
 
 import com.dlh.toolmedia3.BuildConfig
-
+@androidx.media3.common.util.UnstableApi
 class ToolMediaApplication : Application() {
 
     companion object {
         private lateinit var instance: ToolMediaApplication
+        lateinit var playerPool: PlayerPool
 
         fun getInstance(): ToolMediaApplication {
             return instance
@@ -25,6 +27,11 @@ class ToolMediaApplication : Application() {
         DLHLog.enableFileLog(true)
         // 设置日志级别
         DLHLog.setGlobalLogLevel(if (BuildConfig.DEBUG) DLHLog.LogLevel.DEBUG else DLHLog.LogLevel.INFO)
+        // 初始化播放器池
+        playerPool = PlayerPool.getInstance(this)
+        // 预创建一个播放器实例
+        val player = playerPool.acquire()
+        playerPool.release(player)
         // 初始化网络相关组件
         initializeNetworkComponents()
     }

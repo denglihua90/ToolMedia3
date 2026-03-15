@@ -5,6 +5,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import kotlinx.coroutines.CoroutineScope
@@ -30,9 +31,8 @@ class PreloadManager(private val context: Context) {
                 }
             }
         }
-        
-        // 预加载缓存大小（默认50MB）
-        private const val PRELOAD_CACHE_SIZE = 50 * 1024 * 1024L
+
+
     }
     
     // 预加载任务
@@ -95,6 +95,7 @@ class PreloadManager(private val context: Context) {
             private set
         
         private var player: ExoPlayer? = null
+        private var isCancelled = false
         
         /**
          * 开始预加载
@@ -103,28 +104,29 @@ class PreloadManager(private val context: Context) {
             try {
                 status = PreloadStatus.PRELOADING
                 
-                // 创建临时播放器进行预加载
-                val dataSourceFactory = DefaultDataSource.Factory(
-                    context,
-                    DefaultHttpDataSource.Factory()
-                )
-                
-                player = ExoPlayer.Builder(context)
-                    .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-                    .build()
-                
+                // 从播放器池获取播放器实例
+                player = PlayerPool.getInstance(context).acquireForPreload()
+
                 val mediaItem = MediaItem.fromUri(url)
                 player?.setMediaItem(mediaItem)
                 player?.prepare()
                 
-                // 预加载一段时间后停止
+                // 预加载指定时间
                 withContext(Dispatchers.Main) {
-                    Thread.sleep(5000) // 预加载5秒
+                    val startTime = System.currentTimeMillis()
+                    while (System.currentTimeMillis() - startTime < PlayerConfig.PRELOAD_DURATION && !isCancelled) {
+                        Thread.sleep(100)
+                    }
+                    if (!isCancelled) {
+                        status = PreloadStatus.COMPLETED
+                    }
                     cancel()
                 }
                 
             } catch (e: Exception) {
                 status = PreloadStatus.FAILED
+                // 发生异常时释放播放器实例
+                releasePlayer()
             }
         }
         
@@ -132,9 +134,21 @@ class PreloadManager(private val context: Context) {
          * 取消预加载
          */
         fun cancel() {
-            player?.release()
-            player = null
-            status = PreloadStatus.CANCELLED
+            isCancelled = true
+            releasePlayer()
+            if (status != PreloadStatus.COMPLETED && status != PreloadStatus.FAILED) {
+                status = PreloadStatus.CANCELLED
+            }
+        }
+        
+        /**
+         * 释放播放器实例回池
+         */
+        private fun releasePlayer() {
+            player?.let {
+                PlayerPool.getInstance(context).releaseFromPreload(it)
+                player = null
+            }
         }
     }
     

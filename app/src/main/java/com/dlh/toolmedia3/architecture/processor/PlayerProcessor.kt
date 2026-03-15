@@ -245,6 +245,7 @@ class PlayerProcessor(
             is PlayerIntent.ClearCache -> handleClearCache(scope)
             is PlayerIntent.GetCacheSize -> handleGetCacheSize(scope)
             is PlayerIntent.SetMaxCacheSize -> handleSetMaxCacheSize(intent)
+            is PlayerIntent.SetCacheEnabled -> handleSetCacheEnabled(intent)
             is PlayerIntent.TakeScreenshot -> handleTakeScreenshot(scope)
             is PlayerIntent.OnResume -> handleOnResume()
             is PlayerIntent.OnPause -> handleOnPause()
@@ -642,6 +643,19 @@ class PlayerProcessor(
         // 只有当最大缓存容量真正改变时才更新状态
         if (currentState.maxCacheSize != intent.size) {
             _state.update { it.copy(maxCacheSize = intent.size) }
+        }
+    }
+    
+    /**
+     * 处理设置是否开启缓存逻辑
+     * @param intent 设置是否开启缓存意图
+     */
+    private fun handleSetCacheEnabled(intent: PlayerIntent.SetCacheEnabled) {
+        val currentState = _state.value
+        
+        // 只有当缓存开关状态真正改变时才更新状态
+        if (currentState.isCacheEnabled != intent.enabled) {
+            _state.update { it.copy(isCacheEnabled = intent.enabled) }
         }
     }
     

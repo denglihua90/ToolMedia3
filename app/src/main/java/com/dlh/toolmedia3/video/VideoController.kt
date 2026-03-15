@@ -423,11 +423,13 @@ class VideoController(
     fun updateControllerState() {
         val state = viewModel.state.value
 
-        // 更新播放/暂停按钮
-        if (state.isPlaying) {
-            binding.btnPlayPause.setImageResource(R.drawable.baseline_pause_24)
-        } else {
-            binding.btnPlayPause.setImageResource(R.drawable.baseline_play_arrow_24)
+        // 更新播放/暂停按钮（视频加载中时不改变图标）
+        if (state.playState != androidx.media3.common.Player.STATE_BUFFERING) {
+            if (state.isPlaying) {
+                binding.btnPlayPause.setImageResource(R.drawable.baseline_pause_24)
+            } else {
+                binding.btnPlayPause.setImageResource(R.drawable.baseline_play_arrow_24)
+            }
         }
 
         // 更新进度条

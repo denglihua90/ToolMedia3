@@ -20,6 +20,7 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
+import com.dlh.toolmedia3.ToolMediaApplication
 import com.dlh.toolmedia3.architecture.event.PlayerEvent
 import com.dlh.toolmedia3.architecture.processor.PlayerProcessor
 import com.dlh.toolmedia3.architecture.state.PlayerState
@@ -82,7 +83,7 @@ open class BaseVideoView  @JvmOverloads constructor(
     private var videoTitle: String = ""
     
     // 自动保存播放进度的开关
-    private var isAutoSaveProgressEnabled: Boolean = true
+    private var isAutoSaveProgressEnabled: Boolean = false
     
     // 网络状态管理器
     private lateinit var networkStateManager: NetworkStateManager
@@ -90,9 +91,6 @@ open class BaseVideoView  @JvmOverloads constructor(
     
     // 性能监控器
     private lateinit var performanceMonitor: PerformanceMonitor
-    
-    // 辅助数据类
-    data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
     
     /**
      * 根据播放状态调整状态更新间隔
@@ -117,52 +115,13 @@ open class BaseVideoView  @JvmOverloads constructor(
         
         // 初始化网络状态管理器，用于检测网络类型
         networkStateManager = NetworkStateManager.getInstance(context)
-        val networkType = networkStateManager.getCurrentNetworkType()
         
-        // 根据网络类型调整HttpDataSource配置
-        val (connectTimeout, readTimeout) = when (networkType) {
-            NetworkStateManagerNetworkType.WIFI -> Pair(8000, 12000) // WIFI网络：更短的超时
-            NetworkStateManagerNetworkType.CELLULAR -> Pair(10000, 15000) // 移动网络：适中的超时
-            else -> Pair(12000, 18000) // 其他网络：更长的超时
-        }
-        
-        // 初始化ExoPlayer
-        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-            .setConnectTimeoutMs(connectTimeout) // 根据网络类型调整连接超时
-            .setReadTimeoutMs(readTimeout) // 根据网络类型调整读取超时
-//            .setUserAgent("ToolMedia3/1.0") // 设置用户代理
-            .setAllowCrossProtocolRedirects(true) // 允许跨协议重定向
-        val dataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
-        
-        // 根据网络类型调整缓冲策略
-        val (minBuffer, maxBuffer, playbackStart, bufferPlayback) = when (networkType) {
-            NetworkStateManagerNetworkType.WIFI -> 
-                Quadruple(3000, 20000, 300, 800) // WIFI网络：更小的缓冲
-            NetworkStateManagerNetworkType.CELLULAR -> 
-                Quadruple(8000, 40000, 800, 1500) // 移动网络：更大的缓冲
-            else -> 
-                Quadruple(10000, 50000, 1000, 2000) // 其他网络：最大的缓冲
-        }
-        
-        // 配置缓冲策略
-        val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(
-                minBuffer,     // 最小缓冲时间（毫秒）
-                maxBuffer,     // 最大缓冲时间（毫秒）
-                playbackStart, // 播放开始前的最小缓冲时间（毫秒）
-                bufferPlayback // 缓冲播放阈值（毫秒）
-            )
-            .build()
-        
-        player = ExoPlayer.Builder(context)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-            .setLoadControl(loadControl)
-            .build()
+        // 从播放器池获取播放器实例
+        player = ToolMediaApplication.playerPool.acquire()
         playerView.player = player
-        
+
         // 禁用PlayerView的默认控制器和触摸处理
         playerView.useController = false
-        
         // 初始化MVI架构组件
         processor = PlayerProcessor(context, player)
         viewModel = PlayerViewModel(processor)
@@ -471,14 +430,11 @@ open class BaseVideoView  @JvmOverloads constructor(
                         NetworkStateManagerNetworkType.WIFI, NetworkStateManagerNetworkType.CELLULAR, NetworkStateManagerNetworkType.ETHERNET -> {
                             // 网络恢复，自动恢复播放
                             if (!player.isPlaying && player.playbackState == Player.STATE_READY) {
-                                player.play()
+                                player.playWhenReady = true
                             }
-                            // 更新缓冲策略
-                            updateBufferStrategy(networkType)
                         }
                         else -> {
-                            // 其他网络类型，更新缓冲策略
-                            updateBufferStrategy(networkType)
+                            // 其他网络类型不做处理
                         }
                     }
                     // 发送网络状态变化事件
@@ -494,35 +450,6 @@ open class BaseVideoView  @JvmOverloads constructor(
                 }
             }
         }
-    }
-    
-    /**
-     * 根据网络类型更新缓冲策略
-     */
-    private fun updateBufferStrategy(networkType: NetworkStateManagerNetworkType) {
-        // 根据网络类型调整缓冲策略
-        val (minBuffer, maxBuffer, playbackStart, bufferPlayback) = when (networkType) {
-            NetworkStateManagerNetworkType.WIFI -> 
-                Quadruple(3000, 20000, 300, 800) // WIFI网络：更小的缓冲
-            NetworkStateManagerNetworkType.CELLULAR -> 
-                Quadruple(8000, 40000, 800, 1500) // 移动网络：更大的缓冲
-            else -> 
-                Quadruple(10000, 50000, 1000, 2000) // 其他网络：最大的缓冲
-        }
-        
-        // 创建新的LoadControl
-        val newLoadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(
-                minBuffer,     // 最小缓冲时间（毫秒）
-                maxBuffer,     // 最大缓冲时间（毫秒）
-                playbackStart, // 播放开始前的最小缓冲时间（毫秒）
-                bufferPlayback // 缓冲播放阈值（毫秒）
-            )
-            .build()
-        
-        // 注意：在Media3 1.9.0中，ExoPlayer不支持运行时更新LoadControl
-        // 缓冲策略将在播放器初始化时设置
-        println("[BufferStrategy] Updated for network type: $networkType")
     }
     
     /**
@@ -704,8 +631,7 @@ open class BaseVideoView  @JvmOverloads constructor(
         handler.removeCallbacks(stateUpdateRunnable)
     }
     
-    // 移除handleTouchEvent方法，因为不再需要手势操作
-    
+
     /**
      * 更新视频变换（旋转和镜像）
      */
@@ -741,7 +667,8 @@ open class BaseVideoView  @JvmOverloads constructor(
             performanceMonitor.stopMonitoring()
         }
         videoController.destroy()
-        player.release()
+        // 将播放器实例释放回池
+        ToolMediaApplication.playerPool.release(player)
         // 移除网络状态观察
         networkStateObserver?.let {
             networkStateManager.networkState.removeObserver(it)
@@ -756,6 +683,37 @@ open class BaseVideoView  @JvmOverloads constructor(
         if (::viewModel.isInitialized) {
             viewModel.setCutoutAdapted(adapted)
         }
+    }
+    
+    /**
+     * 设置是否开启缓存
+     */
+    fun setCacheEnabled(enabled: Boolean) {
+        if (::viewModel.isInitialized) {
+            viewModel.setCacheEnabled(enabled)
+            ToolMediaApplication.playerPool.setCacheEnabled(enabled)
+        }
+    }
+    
+    /**
+     * 获取是否开启缓存
+     */
+    fun isCacheEnabled(): Boolean {
+        return MediaCacheManager.getInstance(context).isCacheEnabled()
+    }
+    
+    /**
+     * 清空缓存
+     */
+    fun clearCache() {
+        ToolMediaApplication.playerPool.clearCache()
+    }
+    
+    /**
+     * 获取缓存大小
+     */
+    fun getCacheSize(): Long {
+        return ToolMediaApplication.playerPool.getCacheSize()
     }
     
     /**

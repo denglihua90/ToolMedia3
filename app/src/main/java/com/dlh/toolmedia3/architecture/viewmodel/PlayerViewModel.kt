@@ -252,6 +252,13 @@ class PlayerViewModel(
     }
     
     /**
+     * 设置是否开启缓存
+     */
+    fun setCacheEnabled(enabled: Boolean) {
+        sendIntent(PlayerIntent.SetCacheEnabled(enabled))
+    }
+    
+    /**
      * 截图
      */
     fun takeScreenshot() {
