@@ -57,6 +57,9 @@ class ScreenController(private val activity: Activity) {
 
         val decorView = getDecorView() ?: return
 
+        // 关闭输入法
+        closeInputMethod()
+
         isFullScreen = true
         if(isCutoutAdapted) {
             adaptCutoutAboveAndroidP(activity, true)
@@ -399,5 +402,20 @@ class ScreenController(private val activity: Activity) {
     private fun stopOrientationEventListener() {
         orientationEventListener?.disable()
         orientationEventListener = null
+    }
+    
+    /**
+     * 关闭输入法
+     */
+    private fun closeInputMethod() {
+        val inputMethodManager = activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+        inputMethodManager?.let {
+            // 获取当前焦点视图
+            val currentFocus = activity.currentFocus
+            if (currentFocus != null) {
+                // 关闭输入法
+                it.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+            }
+        }
     }
 }
