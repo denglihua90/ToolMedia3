@@ -75,6 +75,9 @@ open class BaseVideoView  @JvmOverloads constructor(
     // 状态更新间隔（毫秒）
     private var STATE_UPDATE_INTERVAL = 300L // 优化：增加更新间隔，减少UI线程负担
     
+    // 上次状态更新时间
+    private var lastUpdateTime = 0L
+    
     // 状态更新任务
     private lateinit var stateUpdateRunnable: Runnable
     
@@ -119,9 +122,10 @@ open class BaseVideoView  @JvmOverloads constructor(
         // 从播放器池获取播放器实例
         player = ToolMediaApplication.playerPool.acquire()
         playerView.player = player
-
+        playerView.player?.playWhenReady = true
         // 禁用PlayerView的默认控制器和触摸处理
         playerView.useController = false
+
         // 初始化MVI架构组件
         processor = PlayerProcessor(context, player)
         viewModel = PlayerViewModel(processor)
@@ -172,14 +176,16 @@ open class BaseVideoView  @JvmOverloads constructor(
             
             // 更新播放器状态到ViewModel
             if (::player.isInitialized && ::viewModel.isInitialized) {
-                // 优化：只在播放器真正播放时才更新状态
-                if (player.isPlaying || player.playbackState == Player.STATE_BUFFERING) {
+                // 优化：只在播放器真正播放时才更新状态，并且每600ms更新一次
+                if ((player.isPlaying || player.playbackState == Player.STATE_BUFFERING) && 
+                    System.currentTimeMillis() - lastUpdateTime > 600) {
                     viewModel.updatePlayerState(
                         player.currentPosition,
                         player.bufferedPosition,
                         player.duration,
                         player.isPlaying
                     )
+                    lastUpdateTime = System.currentTimeMillis()
                 }
             }
             
@@ -430,7 +436,12 @@ open class BaseVideoView  @JvmOverloads constructor(
                         NetworkStateManagerNetworkType.WIFI, NetworkStateManagerNetworkType.CELLULAR, NetworkStateManagerNetworkType.ETHERNET -> {
                             // 网络恢复，自动恢复播放
                             if (!player.isPlaying && player.playbackState == Player.STATE_READY) {
-                                player.playWhenReady = true
+                                // 延迟1秒再恢复播放，确保有足够的缓冲
+                                handler.postDelayed({ 
+                                    if (player.playbackState == Player.STATE_READY) {
+                                        player.playWhenReady = true
+                                    }
+                                }, 1000)
                             }
                         }
                         else -> {
@@ -472,6 +483,26 @@ open class BaseVideoView  @JvmOverloads constructor(
         // 保存视频URL和标题
         this.videoUrl = url
         this.videoTitle = title
+        
+        // 检查视频是否已经被预加载
+        val preloadStatus = PreloadManager.getInstance(context).getPreloadStatus(url)
+        
+        // 显示预加载状态反馈
+        if (preloadStatus == PreloadManager.PreloadStatus.PRELOADING) {
+            // 显示预加载中状态
+            loadingView.updateState(
+                androidx.media3.common.Player.STATE_BUFFERING,
+                0, "正在使用预加载内容...",
+                if (::screenController.isInitialized) screenController.isLandscape() else false
+            )
+        } else if (preloadStatus == PreloadManager.PreloadStatus.COMPLETED) {
+            // 显示预加载完成状态
+            loadingView.updateState(
+                androidx.media3.common.Player.STATE_BUFFERING,
+                100, "使用预加载内容...",
+                if (::screenController.isInitialized) screenController.isLandscape() else false
+            )
+        }
         
         // 清除错误状态
         if (::processor.isInitialized) {
@@ -535,9 +566,26 @@ open class BaseVideoView  @JvmOverloads constructor(
      * 预加载视频
      */
     open fun preloadVideo(url: String, title: String = "") {
+        // 保存视频URL和标题，与setVideoSource保持一致
+        this.videoUrl = url
+        this.videoTitle = title
+        
         viewModel.preloadVideo(url)
         // 使用PreloadManager进行预加载
         PreloadManager.getInstance(context).preloadVideo(url, title)
+    }
+    
+    /**
+     * 加载并播放视频
+     * 先预加载视频，然后设置视频源并开始播放
+     */
+    open fun loadAndPlayVideo(url: String, title: String = "") {
+        // 预加载视频
+        preloadVideo(url, title)
+        // 设置视频源
+        setVideoSource(url, title)
+        // 开始播放
+        play()
     }
     
     /**

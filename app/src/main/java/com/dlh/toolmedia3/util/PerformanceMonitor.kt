@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicLong
 class PerformanceMonitor(private val player: Player) {
     
     companion object {
-        private const val MONITOR_INTERVAL = 1000L // 1秒
-        private const val FRAME_RATE_SAMPLE_SIZE = 30 // 采样帧数
+        private const val MONITOR_INTERVAL = 2000L // 增加到2秒，减少监控频率
+        private const val FRAME_RATE_SAMPLE_SIZE = 20 // 减少采样帧数
     }
     
     /**
@@ -148,33 +148,8 @@ class PerformanceMonitor(private val player: Player) {
      * 计算CPU使用率
      */
     private fun calculateCpuUsage(): Double {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return 0.0 // 旧版本不支持
-        }
-        
-        try {
-            val runtime = Runtime.getRuntime()
-            val process = runtime.exec("top -n 1")
-            val inputStream = process.inputStream
-            val bytes = inputStream.readBytes()
-            val output = String(bytes)
-            
-            // 解析top命令输出，提取CPU使用率
-            // 这里只是简单实现，实际项目中可能需要更复杂的解析
-            val lines = output.lines()
-            for (line in lines) {
-                if (line.contains("CPU:")) {
-                    val parts = line.split(" ").filter { it.isNotEmpty() }
-                    if (parts.size > 1) {
-                        val cpuUsageStr = parts[1].replace("%", "")
-                        return cpuUsageStr.toDoubleOrNull() ?: 0.0
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            DLHLog.e("Error calculating CPU usage", e)
-        }
-        
+        // 简化CPU使用率计算，减少系统资源占用
+        // 实际项目中可以根据需要选择更精确的计算方法
         return 0.0
     }
     

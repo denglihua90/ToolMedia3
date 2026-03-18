@@ -28,6 +28,9 @@ class PlaybackSourceActivity : AppCompatActivity() {
     private  val sourceViewModel by lazy {
         SourceViewModel(this)
     }
+    
+    // 统一的协程作用域
+    private val scope = CoroutineScope(Dispatchers.Main)
 
     @SuppressLint("ResourceType")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +86,7 @@ class PlaybackSourceActivity : AppCompatActivity() {
      * 观察状态
      */
     private fun observeState() {
-        CoroutineScope(Dispatchers.Main).launch {
+        scope.launch {
             sourceViewModel.state.collect {
                 // 处理加载状态
                 if (it.isLoading) {
@@ -91,7 +94,7 @@ class PlaybackSourceActivity : AppCompatActivity() {
                 }
                 
                 // 处理测试
-                 if (it.isTesting) {  //状态
+                if (it.isTesting) {
                     binding.textResult.text = getString(R.string.loading)
                 }
                 
@@ -117,7 +120,7 @@ class PlaybackSourceActivity : AppCompatActivity() {
      * 观察事件
      */
     private fun observeEvents() {
-        CoroutineScope(Dispatchers.Main).launch {
+        scope.launch {
             sourceViewModel.events.collect {
                 when (it) {
                     is com.dlh.toolmedia3.architecture.event.SourceEvent.SaveSuccess -> {

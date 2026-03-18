@@ -8,6 +8,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import java.util.LinkedList
 import java.util.concurrent.Semaphore
 
@@ -69,7 +70,6 @@ class PlayerPool(private val context: Context) {
                 if (pool.size < MAX_POOL_SIZE) {
                     // 重置播放器状态
                     player.stop()
-                    player.playWhenReady = false
                     player.clearMediaItems()
                     pool.add(player)
                 } else {
@@ -81,51 +81,46 @@ class PlayerPool(private val context: Context) {
     }
     
     /**
-     * 创建新的播放器实例
+     * 创建 ExoPlayer 实例
+     * @param loadControl 加载控制配置
      */
-    private fun createPlayer(): ExoPlayer {
+    private fun createExoPlayer(loadControl: DefaultLoadControl): ExoPlayer {
         // 配置HttpDataSource
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setConnectTimeoutMs(PlayerConfig.CONNECT_TIMEOUT_MS)
             .setReadTimeoutMs(PlayerConfig.READ_TIMEOUT_MS)
             .setUserAgent(PlayerConfig.USER_AGENT)
             .setAllowCrossProtocolRedirects(true)
+            .setDefaultRequestProperties(mapOf(
+                "Accept-Encoding" to "gzip, deflate",
+                "Connection" to "keep-alive"
+            )) // 添加请求头以优化网络传输
         
         // 配置缓存DataSource
         val defaultDataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
         val dataSourceFactory = mediaCacheManager.getCacheDataSourceFactory(defaultDataSourceFactory)
         
-        // 配置LoadControl
-        val loadControl = PlayerConfig.createPlayLoadControl()
-        
         return ExoPlayer.Builder(context)
             .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
             .setLoadControl(loadControl)
+            .setRenderersFactory(DefaultRenderersFactory(context).setEnableDecoderFallback(true)) // 启用解码器回退
             .build()
+    }
+    
+    /**
+     * 创建新的播放器实例
+     */
+    private fun createPlayer(): ExoPlayer {
+        val loadControl = PlayerConfig.createPlayLoadControl()
+        return createExoPlayer(loadControl)
     }
     
     /**
      * 创建预加载专用的播放器实例
      */
     private fun createPreloadPlayer(): ExoPlayer {
-        // 配置HttpDataSource
-        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-            .setConnectTimeoutMs(PlayerConfig.CONNECT_TIMEOUT_MS)
-            .setReadTimeoutMs(PlayerConfig.READ_TIMEOUT_MS)
-            .setUserAgent(PlayerConfig.USER_AGENT)
-            .setAllowCrossProtocolRedirects(true)
-        
-        // 配置缓存DataSource
-        val defaultDataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
-        val dataSourceFactory = mediaCacheManager.getCacheDataSourceFactory(defaultDataSourceFactory)
-        
-        // 配置预加载专用的LoadControl
         val loadControl = PlayerConfig.createPreloadLoadControl()
-        
-        return ExoPlayer.Builder(context)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
-            .setLoadControl(loadControl)
-            .build()
+        return createExoPlayer(loadControl)
     }
     
     /**
@@ -151,7 +146,6 @@ class PlayerPool(private val context: Context) {
                 if (preloadPool.size < MAX_POOL_SIZE) {
                     // 重置播放器状态
                     player.stop()
-                    player.playWhenReady = false
                     player.clearMediaItems()
                     preloadPool.add(player)
                 } else {

@@ -64,8 +64,7 @@ class MainActivity : AppCompatActivity() {
             // 使用获取的URL播放视频
 //            val videoTitle = getString(R.string.user_input_video)
             val videoTitle = videoUrl
-            videoView.setVideoSource(videoUrl, videoTitle)
-            videoView.play()
+            videoView.loadAndPlayVideo(videoUrl, videoTitle)
         }
 
         // 为添加播放源按钮添加点击监听器
@@ -89,11 +88,8 @@ class MainActivity : AppCompatActivity() {
         val videoTitle = "寻秦记"
         videoView.setCutoutAdapted(true)
         videoView.setShowSelectionsInLandscape(false)
-        // 预加载视频
-        videoView.preloadVideo(videoUrl, videoTitle)
-
-        // 设置视频源并开始播放
-        videoView.setVideoSource(videoUrl, videoTitle)
+        // 加载并播放视频
+        videoView.loadAndPlayVideo(videoUrl, videoTitle)
     }
 
     override fun onResume() {

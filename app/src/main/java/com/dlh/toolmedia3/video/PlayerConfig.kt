@@ -13,10 +13,10 @@ object PlayerConfig {
     const val USER_AGENT = "ToolMedia3/1.0"
     
     // 播放模式缓冲策略
-    const val PLAY_MIN_BUFFER_MS = 2000
-    const val PLAY_MAX_BUFFER_MS = 20000
-    const val PLAY_BUFFER_FOR_PLAYBACK_MS = 300
-    const val PLAY_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 800
+    const val PLAY_MIN_BUFFER_MS = 3000 // 增加到3秒，提高稳定性
+    const val PLAY_MAX_BUFFER_MS = 25000 // 增加到25秒，增加缓冲量
+    const val PLAY_BUFFER_FOR_PLAYBACK_MS = 500 // 增加到500ms，确保有足够的初始缓冲
+    const val PLAY_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 1200 // 增加到1.2秒，避免频繁缓冲
     
     // 预加载模式缓冲策略
     const val PRELOAD_MIN_BUFFER_MS = 5000

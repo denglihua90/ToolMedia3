@@ -111,15 +111,30 @@ class PreloadManager(private val context: Context) {
                 player?.setMediaItem(mediaItem)
                 player?.prepare()
                 
-                // 预加载指定时间
+                // 持续预加载直到整个视频被缓冲
                 withContext(Dispatchers.Main) {
-                    val startTime = System.currentTimeMillis()
-                    while (System.currentTimeMillis() - startTime < PlayerConfig.PRELOAD_DURATION && !isCancelled) {
+                    // 等待播放器准备完成
+                    while (player?.playbackState != androidx.media3.common.Player.STATE_READY && !isCancelled) {
                         Thread.sleep(100)
                     }
-                    if (!isCancelled) {
-                        status = PreloadStatus.COMPLETED
+                    
+                    // 持续预加载直到缓冲完成或被取消
+                    while (!isCancelled) {
+                        // 检查是否缓冲完成
+                        val currentPosition = player?.currentPosition ?: 0
+                        val bufferedPosition = player?.bufferedPosition ?: 0
+                        val duration = player?.duration ?: 0
+                        
+                        // 如果缓冲位置接近或达到视频总时长，认为缓冲完成
+                        if (duration > 0 && bufferedPosition >= duration - 1000) {
+                            status = PreloadStatus.COMPLETED
+                            break
+                        }
+                        
+                        // 每100ms检查一次
+                        Thread.sleep(100)
                     }
+                    
                     cancel()
                 }
                 

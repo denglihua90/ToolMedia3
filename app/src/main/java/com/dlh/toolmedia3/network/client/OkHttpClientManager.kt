@@ -60,6 +60,8 @@ class OkHttpClientManager {
                 .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
                 .readTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
                 .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+                .connectionPool(okhttp3.ConnectionPool(5, 10, TimeUnit.MINUTES)) // 增加连接池大小
+                .retryOnConnectionFailure(true) // 启用连接失败重试
                 .addInterceptor(loggingInterceptor)
                 .addInterceptor(BaseUrlInterceptor())
                 .addInterceptor {
