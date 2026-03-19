@@ -53,6 +53,9 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    
+    // StateLayout 缺省页框架
+    implementation("com.github.liangjingkanji:StateLayout:1.4.2")
 
     implementation(project(":DLHPlayer"))
     testImplementation(libs.junit)

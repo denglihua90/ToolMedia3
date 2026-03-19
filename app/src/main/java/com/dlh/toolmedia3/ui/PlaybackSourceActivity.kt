@@ -7,17 +7,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.dlh.toolmedia3.R
+import com.dlh.toolmedia3.architecture.event.SourceEvent
 import com.dlh.toolmedia3.architecture.viewmodel.SourceViewModel
+import com.dlh.toolmedia3.data.model.CategoryItem
 import com.dlh.toolmedia3.databinding.ActivityPlaybackSourceBinding
+import com.dlh.toolmedia3.ui.adapter.CategoryAdapter
 import com.gyf.immersionbar.ktx.immersionBar
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
+import com.drake.statelayout.StateLayout
 
 class PlaybackSourceActivity : AppCompatActivity() {
 
@@ -25,12 +28,15 @@ class PlaybackSourceActivity : AppCompatActivity() {
         ActivityPlaybackSourceBinding.inflate(layoutInflater)
     }
     // 初始化 SourceViewModel
-    private  val sourceViewModel by lazy {
+    private val sourceViewModel by lazy {
         SourceViewModel(this)
     }
     
-    // 统一的协程作用域
-    private val scope = CoroutineScope(Dispatchers.Main)
+    // StateLayout 实例
+    private lateinit var stateLayout: StateLayout
+    
+    // RecyclerView 适配器
+    private lateinit var categoryAdapter: CategoryAdapter
 
     @SuppressLint("ResourceType")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +50,14 @@ class PlaybackSourceActivity : AppCompatActivity() {
             finish()
         }
         binding.toolbarSource.title="设置播放源"
+        
+        // 初始化 StateLayout
+        stateLayout = binding.stateLayout
+        
+        // 初始化 RecyclerView
+        binding.recyclerCategories.layoutManager = LinearLayoutManager(this)
+        categoryAdapter = CategoryAdapter()
+        binding.recyclerCategories.adapter = categoryAdapter
         
         // 实现沉浸式标题栏
         immersionBar {
@@ -86,31 +100,36 @@ class PlaybackSourceActivity : AppCompatActivity() {
      * 观察状态
      */
     private fun observeState() {
-        scope.launch {
+        lifecycleScope.launch {
             sourceViewModel.state.collect {
                 // 处理加载状态
-                if (it.isLoading) {
-                    binding.textResult.text = getString(R.string.loading)
-                }
-                
-                // 处理测试
-                if (it.isTesting) {
-                    binding.textResult.text = getString(R.string.loading)
-                }
-                
-                // 处理错误状态
-                if (it.error != null) {
-                    binding.textResult.text = it.error
-                }
-                
-                // 处理测试结果
-                if (it.testResult != null && !it.isTesting) {
-                    binding.textResult.text = it.testResult
-                }
-                
-                // 处理保存成功状态
-                if (it.isSaved) {
-                    binding.textResult.text = getString(R.string.source_saved)
+                if (it.isLoading || it.isTesting) {
+                    stateLayout.showLoading()
+                } else if (it.error != null) {
+                    // 处理错误状态
+                    stateLayout.showError()
+                } else {
+                    // 处理其他状态，显示内容
+                    stateLayout.showContent()
+                    
+                    // 更新结果
+                    when {
+                        it.categories.isNotEmpty() -> {
+                            // 直接使用状态中的 categories 字段
+                            val categories = it.categories
+                            // 更新适配器数据，使用 DiffUtil 优化
+                            categoryAdapter.updateData(categories)
+                        }
+                        it.isSaved -> {
+                            // 保存成功，清空列表
+                            categoryAdapter.updateData(emptyList())
+                            Toast.makeText(this@PlaybackSourceActivity, getString(R.string.source_saved), Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            // 清空列表
+                            categoryAdapter.updateData(emptyList())
+                        }
+                    }
                 }
             }
         }
@@ -120,19 +139,13 @@ class PlaybackSourceActivity : AppCompatActivity() {
      * 观察事件
      */
     private fun observeEvents() {
-        scope.launch {
+        lifecycleScope.launch {
             sourceViewModel.events.collect {
                 when (it) {
-                    is com.dlh.toolmedia3.architecture.event.SourceEvent.SaveSuccess -> {
-                        Toast.makeText(this@PlaybackSourceActivity, getString(R.string.source_saved), Toast.LENGTH_SHORT).show()
-                    }
-                    is com.dlh.toolmedia3.architecture.event.SourceEvent.SaveError -> {
+                    is SourceEvent.SaveError -> {
                         Toast.makeText(this@PlaybackSourceActivity, it.message, Toast.LENGTH_SHORT).show()
                     }
-                    is com.dlh.toolmedia3.architecture.event.SourceEvent.TestSuccess -> {
-                        // 测试成功，结果已在状态中处理
-                    }
-                    is com.dlh.toolmedia3.architecture.event.SourceEvent.TestError -> {
+                    is SourceEvent.TestError -> {
                         Toast.makeText(this@PlaybackSourceActivity, it.message, Toast.LENGTH_SHORT).show()
                     }
                     else -> {

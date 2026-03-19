@@ -8,6 +8,8 @@ import com.dlh.toolmedia3.util.DLHLog
 import com.dlh.toolmedia3.video.PlayerPool
 
 import com.dlh.toolmedia3.BuildConfig
+import com.drake.statelayout.StateConfig
+
 @androidx.media3.common.util.UnstableApi
 class ToolMediaApplication : Application() {
 
@@ -34,6 +36,26 @@ class ToolMediaApplication : Application() {
         playerPool.release(player)
         // 初始化网络相关组件
         initializeNetworkComponents()
+
+        StateConfig.apply {
+            emptyLayout = R.layout.layout_empty
+            errorLayout = R.layout.layout_error
+            loadingLayout = R.layout.layout_loading
+
+            setRetryIds(R.id.msg) // 全局的重试Id
+
+            onLoading {
+
+            }
+
+            onEmpty {
+
+            }
+
+            onError {
+
+            }
+        }
     }
 
     /**

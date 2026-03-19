@@ -76,25 +76,24 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_submit" />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/text_result"
+    <com.drake.statelayout.StateLayout
+        android:id="@+id/stateLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="@dimen/dp_12"
-        android:textIsSelectable="true"
-        android:background="@drawable/rv_item_bg"
-        android:gravity="start"
-        android:hint="@string/text_hit_source_result"
-        android:letterSpacing="0.05"
-        android:lineSpacingExtra="1dp"
-        android:padding="@dimen/dp_12"
-        android:scrollbars="vertical"
-        android:textColor="@color/text_primary"
-        android:textSize="@dimen/sp_15"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_save" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_save">
+        
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_categories"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="@dimen/dp_12"
+
+            android:padding="@dimen/dp_12" />
+            
+    </com.drake.statelayout.StateLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

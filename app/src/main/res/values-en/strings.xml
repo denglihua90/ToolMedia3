@@ -65,4 +65,14 @@
     <string name="download_completed">Download completed</string>
     <string name="download_failed">Download failed</string>
     <string name="download_canceled">Canceled</string>
+
+    <!-- 播放源测试 -->
+    <string name="loading">加载中...</string>
+    <string name="hint_source_url">请输入播放源地址</string>
+    <string name="hint_source_input">请输入播放源名称和地址</string>
+    <string name="source_saved">播放源已保存</string>
+    <string name="empty_response">响应数据为空</string>
+    <string name="request_failed" formatted="false">请求失败: %d %s</string>
+    <string name="network_error" formatted="false">网络错误: %s</string>
+    <string name="unknown_error" formatted="false">未知错误: %s</string>
 </resources>

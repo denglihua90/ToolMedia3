@@ -1,6 +1,8 @@
 package com.dlh.toolmedia3.network
 
 import android.content.Context
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import com.dlh.toolmedia3.ToolMediaApplication
 import com.dlh.toolmedia3.network.repository.NetworkRepository
 import com.dlh.toolmedia3.network.service.ApiService
@@ -10,6 +12,7 @@ import com.dlh.toolmedia3.network.service.RetrofitService
  * 网络服务管理类
  * 提供全局单例访问网络功能
  */
+@OptIn(UnstableApi::class)
 object NetworkService {
 
     private lateinit var networkRepository: NetworkRepository

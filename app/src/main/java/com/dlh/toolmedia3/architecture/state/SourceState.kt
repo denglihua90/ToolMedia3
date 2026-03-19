@@ -1,5 +1,6 @@
 package com.dlh.toolmedia3.architecture.state
 
+import com.dlh.toolmedia3.data.model.CategoryItem
 import com.dlh.toolmedia3.data.model.PlaybackSource
 
 /**
@@ -11,5 +12,5 @@ data class SourceState(
     val error: String? = null,
     val isSaved: Boolean = false,
     val isTesting: Boolean = false,
-    val testResult: String? = null
+    val categories: List<CategoryItem> = emptyList()
 )

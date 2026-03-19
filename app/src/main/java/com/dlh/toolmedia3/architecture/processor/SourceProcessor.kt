@@ -8,6 +8,7 @@ import com.dlh.toolmedia3.data.DatabaseManager
 import com.dlh.toolmedia3.data.model.PlaybackSource
 import com.dlh.toolmedia3.network.NetworkService
 import com.dlh.toolmedia3.network.repository.NetworkRepository
+import com.dlh.toolmedia3.network.repository.NetworkResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -193,7 +194,7 @@ class SourceProcessor(private val context: Context) {
             try {
                 // 更新状态为测试中
                 withContext(Dispatchers.Main) {
-                    _state.value = _state.value.copy(isTesting = true, error = null, testResult = null)
+                    _state.value = _state.value.copy(isTesting = true, error = null, categories = emptyList())
                 }
 
                 // 执行网络请求
@@ -202,20 +203,29 @@ class SourceProcessor(private val context: Context) {
 
                 // 处理网络请求结果
                 when (result) {
-                    is com.dlh.toolmedia3.network.repository.NetworkResult.Success -> {
+                    is NetworkResult.Success -> {
+                        // 获取 categories 数据
+                        val categories = result.data.categories
                         // 更新状态为测试成功
                         withContext(Dispatchers.Main) {
-                            _state.value = _state.value.copy(isTesting = false, testResult = result.data.categories.toString())
+                            _state.value = _state.value.copy(
+                                isTesting = false,
+                                categories = categories
+                            )
                         }
                         
                         // 发送测试成功事件
                         _events.emit(SourceEvent.TestSuccess(result.data.toString()))
                     }
-                    is com.dlh.toolmedia3.network.repository.NetworkResult.Error -> {
+                    is NetworkResult.Error -> {
                         // 更新状态为测试失败
                         val errorMessage = result.message
                         withContext(Dispatchers.Main) {
-                            _state.value = _state.value.copy(isTesting = false, error = errorMessage, testResult = errorMessage)
+                            _state.value = _state.value.copy(
+                                isTesting = false, 
+                                error = errorMessage,
+                                categories = emptyList()
+                            )
                         }
                         
                         // 发送测试失败事件
@@ -226,7 +236,11 @@ class SourceProcessor(private val context: Context) {
                 // 更新状态为测试失败
                 val errorMessage = e.message ?: "测试失败"
                 withContext(Dispatchers.Main) {
-                    _state.value = _state.value.copy(isTesting = false, error = errorMessage, testResult = errorMessage)
+                    _state.value = _state.value.copy(
+                        isTesting = false, 
+                        error = errorMessage,
+                        categories = emptyList()
+                    )
                 }
                 
                 // 发送测试失败事件
